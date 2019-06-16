@@ -3,4 +3,4 @@ project(CARLA)
 
 include("lib/CMakeLists.txt.in")
 
-add_subdirectory("lib/libcarla/cmake")
+add_subdirectory("src/libcarla/cmake")
