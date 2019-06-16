@@ -72,8 +72,10 @@ else
   rm -Rf ${BOOST_BASENAME}-source
   rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
-  cp -r ${BOOST_BASENAME}-install/include ${BOOST_INCLUDE}
-  cp -r ${BOOST_BASENAME}-install/lib ${BOOST_LIBPATH}
+  cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}
+  cp ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
+
+  rm -Rf ${BOOST_BASENAME}-install
 
 fi
 
@@ -122,8 +124,10 @@ else
 
   rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libstdcxx-build
 
-  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include ${RPCLIB_LIBSTDCXX_INCLUDE}
-  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib ${RPCLIB_LIBSTDCXX_LIBPATH}
+  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include/rpc ${RPCLIB_LIBSTDCXX_INCLUDE}
+  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
+
+  rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
 
 fi
 
@@ -172,8 +176,10 @@ else
 
   rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
 
-  cp -r ${GTEST_BASENAME}-libstdcxx-install/include ${GTEST_LIBSTDCXX_INCLUDE}
-  cp -r ${GTEST_BASENAME}-libstdcxx-install/lib ${GTEST_LIBSTDCXX_LIBPATH}
+  cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}
+  cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
+
+  rm -Rf ${GTEST_BASENAME}-libstdcxx-install
 
 fi
 
