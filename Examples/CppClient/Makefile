@@ -7,7 +7,7 @@ TOOLCHAIN=$(CURDIR)/ToolChain.cmake
 
 CC=/usr/bin/gcc
 CXX=/usr/bin/g++
-CXXFLAGS=-std=c++14 -pthread -fPIC -O3 -DNDEBUG -Werror -Wall -Wextra
+CXXFLAGS=-std=c++14 -pthread -fPIC -O3 -DNDEBUG
 
 define log
 	@echo "\033[1;35m$(1)\033[0m"
