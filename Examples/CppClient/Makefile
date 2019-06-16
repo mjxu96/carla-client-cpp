@@ -49,7 +49,6 @@ build_libcarla: $(TOOLCHAIN)
 			-DCMAKE_INSTALL_PREFIX=$(INSTALLDIR) \
 			-DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
 			$(CARLADIR); \
-	  fi; \
 		make; \
 		make install | grep -v "Up-to-date:"; \
 	}
