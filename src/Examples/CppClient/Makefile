@@ -1,5 +1,5 @@
 CURDIR=$(PWD)
-CARLADIR=$(CURDIR)/../..
+CARLADIR=$(CURDIR)/../../../
 BUILDDIR=$(CURDIR)/build
 BINDIR=$(CURDIR)/bin
 INSTALLDIR=$(CURDIR)/libcarla-install
