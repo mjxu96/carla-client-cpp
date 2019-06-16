@@ -39,9 +39,8 @@ build_libcarla: $(TOOLCHAIN)
 	$(call log,Compiling LibCarla.client...)
 	@{ \
 		cd $(BUILDDIR); \
-		if [ ! -f "build.ninja" ]; then \
 		cmake \
-			-G "Ninja" \
+			-G "Unix Makefiles" \
 			-DCMAKE_BUILD_TYPE=Client \
 			-DLIBCARLA_BUILD_RELEASE=ON \
 			-DLIBCARLA_BUILD_DEBUG=OFF \
@@ -51,8 +50,8 @@ build_libcarla: $(TOOLCHAIN)
 			-DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
 			$(CARLADIR); \
 	  fi; \
-		ninja; \
-		ninja install | grep -v "Up-to-date:"; \
+		make; \
+		make install | grep -v "Up-to-date:"; \
 	}
 
 $(TOOLCHAIN):
