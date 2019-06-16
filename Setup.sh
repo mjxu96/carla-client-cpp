@@ -125,7 +125,7 @@ else
   rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libstdcxx-build
 
   cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include/rpc ${RPCLIB_LIBSTDCXX_INCLUDE}/rpc
-  cp ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
+  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
 
   rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
 
@@ -177,7 +177,7 @@ else
   rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
 
   cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}/gtest
-  cp ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
+  cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
 
   rm -Rf ${GTEST_BASENAME}-libstdcxx-install
 
@@ -243,6 +243,11 @@ fi
 # -- Move files ----------------------------------------------------------------
 
 move_if_changed "${CMAKE_CONFIG_FILE}.gen" "${CMAKE_CONFIG_FILE}"
+
+# ==============================================================================
+# -- ...clean up ---------------------------------------------------------------
+# ==============================================================================
+rm -r cmake pkgconfig
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
