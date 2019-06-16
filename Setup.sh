@@ -95,14 +95,14 @@ else
 
   pushd ${RPCLIB_BASENAME}-libstdcxx-build >/dev/null
 
-  cmake -G "Ninja" \
+  cmake -G "Unix Makefiles" \
       -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libstdcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
-  ninja
+  make
 
-  ninja install
+  make install
 
   popd >/dev/null
 
@@ -140,14 +140,14 @@ else
 
   pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
 
-  cmake -G "Ninja" \
+  cmake -G "Unix Makefiles" \
       -DCMAKE_CXX_FLAGS="-std=c++14" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
       ../${GTEST_BASENAME}-source
 
-  ninja
+  make
 
-  ninja install
+  make install
 
   popd >/dev/null
 
