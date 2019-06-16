@@ -32,7 +32,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 BOOST_VERSION=1.69.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
-BOOST_INCLUDE=${TMP_LIB_INCLUDE_PATH}/boost
+BOOST_INCLUDE=${TMP_LIB_INCLUDE_PATH}
 #${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${CARLA_BUILD_FOLDER}
 #${PWD}/${BOOST_BASENAME}-install/lib
@@ -72,7 +72,7 @@ else
   rm -Rf ${BOOST_BASENAME}-source
   rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
-  cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}
+  cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}/boost
   cp ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
 
   rm -Rf ${BOOST_BASENAME}-install
@@ -88,7 +88,7 @@ unset BOOST_BASENAME
 RPCLIB_PATCH=v2.2.1_c1
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
-RPCLIB_LIBSTDCXX_INCLUDE=${TMP_LIB_INCLUDE_PATH}/rpc
+RPCLIB_LIBSTDCXX_INCLUDE=${TMP_LIB_INCLUDE_PATH}
 #${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/include
 RPCLIB_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
 #${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/lib
@@ -124,8 +124,8 @@ else
 
   rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libstdcxx-build
 
-  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include/rpc ${RPCLIB_LIBSTDCXX_INCLUDE}
-  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
+  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include/rpc ${RPCLIB_LIBSTDCXX_INCLUDE}/rpc
+  cp ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
 
   rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
 
@@ -140,7 +140,7 @@ unset RPCLIB_BASENAME
 GTEST_VERSION=1.8.1
 GTEST_BASENAME=gtest-${GTEST_VERSION}-${CXX_TAG}
 
-GTEST_LIBSTDCXX_INCLUDE=${TMP_LIB_INCLUDE_PATH}/gtest
+GTEST_LIBSTDCXX_INCLUDE=${TMP_LIB_INCLUDE_PATH}
 #${PWD}/${GTEST_BASENAME}-libstdcxx-install/include
 GTEST_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
 #${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
@@ -176,8 +176,8 @@ else
 
   rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
 
-  cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}
-  cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
+  cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}/gtest
+  cp ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
 
   rm -Rf ${GTEST_BASENAME}-libstdcxx-install
 
@@ -243,13 +243,6 @@ fi
 # -- Move files ----------------------------------------------------------------
 
 move_if_changed "${CMAKE_CONFIG_FILE}.gen" "${CMAKE_CONFIG_FILE}"
-
-
-# ==============================================================================
-# -- clean up ------------------------------------------------------------------
-# ==============================================================================
-
-rm -rf cmake pkgconfig
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
