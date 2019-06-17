@@ -13,8 +13,8 @@ CXX_TAG=c7
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
 
-CURDIR=$(cd "$(dirname "$0")"; pwd)
-source ${CURDIR}/Environment.sh
+CURDIR=$(cd "$(dirname "$0")"; cd../; pwd)
+source ${CURDIR}/environment.sh
 unset CURDIR
 
 
@@ -107,7 +107,7 @@ cmake -G "Unix Makefiles" \
     -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libstdcxx-install" \
     ../${RPCLIB_BASENAME}-source
 
-make
+make -j${LIB_BUILD_CONCURRENCY}
 
 make install
 
@@ -154,7 +154,7 @@ cmake -G "Unix Makefiles" \
     -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
     ../${GTEST_BASENAME}-source
 
-make
+make -j${LIB_BUILD_CONCURRENCY}
 
 make install
 
@@ -256,7 +256,7 @@ cmake \
   -DLIBCARLA_HEADER_INSTALL_PATH=${LIBCARLA_HEADER_INSTALL_PATH} \
   ${CARLA_ROOT_FOLDER}; \
 
-make
+make -j${LIB_BUILD_CONCURRENCY}
 make install
 
 popd >/dev/null

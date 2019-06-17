@@ -30,6 +30,7 @@ LIBCARLA_LIB_INSTALL_PATH=${CURDIR}
 LIBCARLA_HEADER_INSTALL_PATH=${CURDIR}
 LIBCARLA_BUILD_TOOLCHAIN=${CURDIR}/lib/Toolchain.cmake
 
+LIB_BUILD_CONCURRENCY=$(nproc --all)
 CARLA_BUILD_CONCURRENCY=`nproc --all`
 
 # ==============================================================================
