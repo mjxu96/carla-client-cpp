@@ -1,8 +1,11 @@
 CURDIR=$(PWD)
-CARLADIR=$(CURDIR)/../../../
+CARLADIR=$(CURDIR)/../../
 BINDIR=$(CURDIR)/bin
 INSTALLDIR=$(CARLADIR)
 
+CC=/usr/bin/gcc
+CXX=/usr/bin/g++
+CXXFLAGS=-std=c++14 -pthread -fPIC -O3 -DNDEBUG
 
 define log
 	@echo "\033[1;35m$(1)\033[0m"
@@ -10,9 +13,6 @@ endef
 
 default: build
 
-clean:
-	@rm -rf $(BUILDDIR) $(INSTALLDIR)
-	@rm -f ToolChain.cmake
 
 run: build
 	$(call log,Running C++ Client...)
