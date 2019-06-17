@@ -35,51 +35,46 @@ BOOST_VERSION=1.69.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
-#${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${CARLA_BUILD_FOLDER}
-#${PWD}/${BOOST_BASENAME}-install/lib
 
-if [[ -d "${BOOST_BASENAME}-install" ]] ; then
-  log "${BOOST_BASENAME} already installed."
-else
+rm -Rf ${BOOST_BASENAME}-source
 
-  rm -Rf ${BOOST_BASENAME}-source
+BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
-  BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
+log "Retrieving boost."
+wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
 
-  log "Retrieving boost."
-  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
+log "Extracting boost for Python 2."
+tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
+mkdir -p ${BOOST_BASENAME}-install/include
+mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
 
-  log "Extracting boost for Python 2."
-  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
-  mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
+pushd ${BOOST_BASENAME}-source >/dev/null
 
-  pushd ${BOOST_BASENAME}-source >/dev/null
+BOOST_TOOLSET="gcc"
+BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
-  BOOST_TOOLSET="gcc"
-  BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
+./bootstrap.sh \
+    --with-toolset=gcc \
+    --prefix=../boost-install \
+    --with-libraries=filesystem
 
-  ./bootstrap.sh \
-      --with-toolset=gcc \
-      --prefix=../boost-install \
-      --with-libraries=filesystem
+./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
 
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
+# Get rid of  python2 build artifacts completely & do a clean build for python3
+popd >/dev/null
+rm -Rf ${BOOST_BASENAME}-source
+rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
-  # Get rid of  python2 build artifacts completely & do a clean build for python3
-  popd >/dev/null
-  rm -Rf ${BOOST_BASENAME}-source
-  rm ${BOOST_PACKAGE_BASENAME}.tar.gz
+mkdir -p ${BOOST_INCLUDE}/boost
 
-  cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}/boost
-  cp ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
+cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}/boost
+cp ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
 
-  rm -Rf ${BOOST_BASENAME}-install
+rm -Rf ${BOOST_BASENAME}-install
 
-fi
 
 unset BOOST_BASENAME
 
@@ -94,44 +89,40 @@ RPCLIB_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 #${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/include
 RPCLIB_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
 #${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/lib
+rm -Rf \
+    ${RPCLIB_BASENAME}-source \
+    ${RPCLIB_BASENAME}-libstdcxx-build \
+    ${RPCLIB_BASENAME}-libstdcxx-install
 
-if [[ -d "${RPCLIB_BASENAME}-libstdcxx-install" ]] ; then
-  log "${RPCLIB_BASENAME} already installed."
-else
-  rm -Rf \
-      ${RPCLIB_BASENAME}-source \
-      ${RPCLIB_BASENAME}-libstdcxx-build \
-      ${RPCLIB_BASENAME}-libstdcxx-install
+log "Retrieving rpclib."
 
-  log "Retrieving rpclib."
+git clone -b ${RPCLIB_PATCH} https://github.com/carla-simulator/rpclib.git ${RPCLIB_BASENAME}-source
 
-  git clone -b ${RPCLIB_PATCH} https://github.com/carla-simulator/rpclib.git ${RPCLIB_BASENAME}-source
+log "Building rpclib with libstdc++."
 
-  log "Building rpclib with libstdc++."
+mkdir -p ${RPCLIB_BASENAME}-libstdcxx-build
 
-  mkdir -p ${RPCLIB_BASENAME}-libstdcxx-build
+pushd ${RPCLIB_BASENAME}-libstdcxx-build >/dev/null
 
-  pushd ${RPCLIB_BASENAME}-libstdcxx-build >/dev/null
+cmake -G "Unix Makefiles" \
+    -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+    -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libstdcxx-install" \
+    ../${RPCLIB_BASENAME}-source
 
-  cmake -G "Unix Makefiles" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
-      -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libstdcxx-install" \
-      ../${RPCLIB_BASENAME}-source
+make
 
-  make
+make install
 
-  make install
+popd >/dev/null
 
-  popd >/dev/null
+rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libstdcxx-build
 
-  rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libstdcxx-build
+mkdir -p ${RPCLIB_LIBSTDCXX_INCLUDE}/rpc
 
-  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include/rpc ${RPCLIB_LIBSTDCXX_INCLUDE}/rpc
-  cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
+cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include/rpc ${RPCLIB_LIBSTDCXX_INCLUDE}/rpc
+cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
 
-  rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
-
-fi
+rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
 
 unset RPCLIB_BASENAME
 
@@ -147,43 +138,40 @@ GTEST_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 GTEST_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
 #${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
 
-if [[ -d "${GTEST_BASENAME}-libstdcxx-install" ]] ; then
-  log "${GTEST_BASENAME} already installed."
-else
-  rm -Rf \
-      ${GTEST_BASENAME}-source \
-      ${GTEST_BASENAME}-libstdcxx-build \
-      ${GTEST_BASENAME}-libstdcxx-install
+rm -Rf \
+    ${GTEST_BASENAME}-source \
+    ${GTEST_BASENAME}-libstdcxx-build \
+    ${GTEST_BASENAME}-libstdcxx-install
 
-  log "Retrieving Google Test."
+log "Retrieving Google Test."
 
-  git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
+git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
 
-  log "Building Google Test with libstdc++."
+log "Building Google Test with libstdc++."
 
-  mkdir -p ${GTEST_BASENAME}-libstdcxx-build
+mkdir -p ${GTEST_BASENAME}-libstdcxx-build
 
-  pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
+pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
 
-  cmake -G "Unix Makefiles" \
-      -DCMAKE_CXX_FLAGS="-std=c++14" \
-      -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
-      ../${GTEST_BASENAME}-source
+cmake -G "Unix Makefiles" \
+    -DCMAKE_CXX_FLAGS="-std=c++14" \
+    -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
+    ../${GTEST_BASENAME}-source
 
-  make
+make
 
-  make install
+make install
 
-  popd >/dev/null
+popd >/dev/null
 
-  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
+rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
 
-  cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}/gtest
-  cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
+mkdir -p ${GTEST_LIBSTDCXX_INCLUDE}/gtest
 
-  rm -Rf ${GTEST_BASENAME}-libstdcxx-install
+cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}/gtest
+cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
 
-fi
+rm -Rf ${GTEST_BASENAME}-libstdcxx-install
 
 unset GTEST_BASENAME
 
