@@ -11,12 +11,12 @@ set -e
 # -- Environment variable definitions ------------------------------------------
 # ==============================================================================
 
-# Here CURDIR is assumed to be the root folder of the project.
+# Here CARLA_FOLDER is assumed to be the root folder of the project.
 
-CARLA_ROOT_FOLDER=${CURDIR}
-CARLA_BUILD_FOLDER=${CURDIR}/lib
+CARLA_ROOT_FOLDER=${CARLA_FOLDER}
+CARLA_BUILD_FOLDER=${CARLA_FOLDER}/lib
 
-LIBCARLA_ROOT_FOLDER=${CURDIR}/src/libcarla
+LIBCARLA_ROOT_FOLDER=${CARLA_FOLDER}/src/libcarla
 
 
 CMAKE_CONFIG_FILE=${CARLA_BUILD_FOLDER}/CMakeLists.txt.in
@@ -25,10 +25,10 @@ LIBCARLA_TEST_CONTENT_FOLDER=${CARLA_BUILD_FOLDER}/test-content
 
 # libcarla variables
 
-LIBCARLA_BUILD_PATH=${CURDIR}/build
-LIBCARLA_LIB_INSTALL_PATH=${CURDIR}
-LIBCARLA_HEADER_INSTALL_PATH=${CURDIR}
-LIBCARLA_BUILD_TOOLCHAIN=${CURDIR}/lib/Toolchain.cmake
+LIBCARLA_BUILD_PATH=${CARLA_FOLDER}/build
+LIBCARLA_LIB_INSTALL_PATH=${CARLA_FOLDER}
+LIBCARLA_HEADER_INSTALL_PATH=${CARLA_FOLDER}
+LIBCARLA_BUILD_TOOLCHAIN=${CARLA_FOLDER}/lib/Toolchain.cmake
 
 LIB_BUILD_CONCURRENCY=$(nproc --all)
 CARLA_BUILD_CONCURRENCY=`nproc --all`
