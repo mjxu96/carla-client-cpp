@@ -10,10 +10,12 @@ if ! [ -x "$(command -v /usr/bin/clang++-7)" ] && ! [ -x "$(command -v /usr/bin/
   exit 1;
 fi
 
-
 CARLA_FOLDER=$(cd "$(dirname "$0")"; cd ../; pwd)
 source ${CARLA_FOLDER}/setup/environment.sh
 unset CARLA_FOLDER
+
+log "clean up previous build files"
+rm -rf ${CARLA_BUILD_FOLDER} ${CARLA_ROOT_FOLDER}/build ${CARLA_ROOT_FOLDER}/include/lib
 
 CXX_TAG=c7
 export CC=/usr/bin/gcc
