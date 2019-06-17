@@ -18,7 +18,7 @@ unset CARLA_FOLDER
 CXX_TAG=c7
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
-if [ $1 = "clang" ]; then
+if [[ $1 = "clang" ]]; then
   export CC=/usr/bin/clang
   export CXX=/usr/bin/clang++
   log "using clang"
