@@ -21,6 +21,8 @@ if [ $1 = "clang" ]; then
   export CC=/usr/bin/clang
   export CXX=/usr/bin/clang++
   log "using clang"
+else
+  log "using gcc"
 fi
 
 # ==============================================================================
