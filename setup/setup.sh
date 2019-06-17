@@ -4,10 +4,11 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
-  echo >&2 "clang 7 is required, but it's not installed.";
+
+if ! [ -x "$(command -v /usr/bin/clang++-7)" ] && ! [ -x "$(command -v /usr/bin/g++-7)" ]; then
+  echo >&2 "clang 7 or gcc 7 is required, but they're not installed.";
   exit 1;
-}
+fi
 
 
 CARLA_FOLDER=$(cd "$(dirname "$0")"; cd ../; pwd)
@@ -51,7 +52,7 @@ BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 log "Retrieving boost."
 wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
 
-log "Extracting boost for Python 2."
+log "Building boost filesystem object file."
 tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
 mkdir -p ${BOOST_BASENAME}-install/include
 mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
