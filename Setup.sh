@@ -13,7 +13,7 @@ CXX_TAG=c7
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
 
-CURDIR=$(dirname "$0")
+CURDIR=$(cd "$(dirname "$0")"; pwd)
 source ${CURDIR}/Environment.sh
 unset CURDIR
 
