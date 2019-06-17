@@ -263,7 +263,7 @@ mkdir -p ${LIBCARLA_BUILD_PATH}
 
 echo "set(CMAKE_C_COMPILER /usr/bin/clang)" > ${LIBCARLA_BUILD_TOOLCHAIN}
 echo "set(CMAKE_CXX_COMPILER /usr/bin/clang++)" >> ${LIBCARLA_BUILD_TOOLCHAIN}
-echo "set(CMAKE_CXX_FLAGS \"\$${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC -O3 -DNDEBUG\" CACHE STRING \"\" FORCE)" >> ${LIBCARLA_BUILD_TOOLCHAIN}
+echo "set(CMAKE_CXX_FLAGS \"\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC -O3 -DNDEBUG\" CACHE STRING \"\" FORCE)" >> ${LIBCARLA_BUILD_TOOLCHAIN}
 
 pushd ${LIBCARLA_BUILD_PATH} >/dev/null
 
