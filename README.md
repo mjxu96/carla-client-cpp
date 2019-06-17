@@ -8,7 +8,8 @@ usage:
 ```
 $ git clone https://github.com/wx9698/carla-client-cpp.git
 $ cd carla-client-cpp
-$ ./install-carla-tool.sh             # install necessary carla build tools
-$ cd Examples/CppClient
-$ make
+$ sudo ./install-carla-tool.sh             # install necessary carla build tools
+$ ./setup/setup.sh
+$ cd src/example
+$ make build
 ```
