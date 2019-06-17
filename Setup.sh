@@ -68,8 +68,6 @@ popd >/dev/null
 rm -Rf ${BOOST_BASENAME}-source
 rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
-mkdir -p ${BOOST_INCLUDE}/boost
-
 cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}/boost
 cp ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
 
@@ -116,8 +114,6 @@ make install
 popd >/dev/null
 
 rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libstdcxx-build
-
-mkdir -p ${RPCLIB_LIBSTDCXX_INCLUDE}/rpc
 
 cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include/rpc ${RPCLIB_LIBSTDCXX_INCLUDE}/rpc
 cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
@@ -166,7 +162,6 @@ popd >/dev/null
 
 rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
 
-mkdir -p ${GTEST_LIBSTDCXX_INCLUDE}/gtest
 
 cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}/gtest
 cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
