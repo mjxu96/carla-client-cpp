@@ -4,36 +4,47 @@
 
 set -e
 
-CURDIR=${PWD}
-# "$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
-source $(dirname "$0")/Vars.mk
-# CARLA_ROOT_FOLDER=${PWD}
-# CARLA_BUILD_FOLDER=${CARLA_ROOT_FOLDER}/build
-unset CURDIR
+# source $(dirname "$0")/Vars.mk
 
-if [ -n "${CARLA_BUILD_NO_COLOR}" ]; then
 
-  function log {
-      echo "`basename "$0"`: $1"
-  }
+# ==============================================================================
+# -- Environment variable definitions ------------------------------------------
+# ==============================================================================
 
-  function fatal_error {
-    echo -e >&2 "`basename "$0"`: ERROR: $1"
-    exit 2
-  }
+# Here CURDIR is assumed to be the root folder of the project.
 
-else
+CARLA_ROOT_FOLDER=${CURDIR}
+CARLA_BUILD_FOLDER=${CURDIR}/lib
 
-  function log {
-    echo -e "\033[1;35m`basename "$0"`: $1\033[0m"
-  }
+LIBCARLA_ROOT_FOLDER=${CURDIR}/src/libcarla
 
-  function fatal_error {
-    echo -e >&2 "\033[0;31m`basename "$0"`: ERROR: $1\033[0m"
-    exit 2
-  }
 
-fi
+CMAKE_CONFIG_FILE=${CARLA_BUILD_FOLDER}/CMakeLists.txt.in
+
+LIBCARLA_TEST_CONTENT_FOLDER=${CARLA_BUILD_FOLDER}/test-content
+
+# libcarla variables
+
+LIBCARLA_BUILD_PATH=${CURDIR}/build
+LIBCARLA_LIB_INSTALL_PATH=${CURDIR}
+LIBCARLA_HEADER_INSTALL_PATH=${CURDIR}
+LIBCARLA_BUILD_TOOLCHAIN=${CURDIR}/lib/Toolchain.cmake
+
+CARLA_BUILD_CONCURRENCY=`nproc --all`
+
+# ==============================================================================
+# -- Useful function definitions -----------------------------------------------
+# ==============================================================================
+
+function log {
+  echo -e "\033[1;35m`basename "$0"`: $1\033[0m"
+}
+
+function fatal_error {
+  echo -e >&2 "\033[0;31m`basename "$0"`: ERROR: $1\033[0m"
+  exit 2
+}
+
 
 function get_git_repository_version {
   echo -e "0.9.5-158-g114d54d8"
@@ -50,4 +61,3 @@ function move_if_changed {
   rm -f $1
 }
 
-CARLA_BUILD_CONCURRENCY=`nproc --all`

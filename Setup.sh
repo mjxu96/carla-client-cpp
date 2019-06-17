@@ -13,14 +13,16 @@ CXX_TAG=c7
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
 
-source $(dirname "$0")/Environment.sh
+CURDIR=$(dirname "$0")
+source CURDIR/Environment.sh
+unset CURDIR
 
 
 # ==============================================================================
 # -- mkdir include folder ------------------------------------------------------
 # ==============================================================================
-TMP_LIB_INCLUDE_PATH=${PWD}/include/lib
-mkdir -p ${TMP_LIB_INCLUDE_PATH}
+LIB_HEADER_INCLUDE_PATH=${CARLA_ROOT_FOLDER}/include/lib
+mkdir -p ${LIB_HEADER_INCLUDE_PATH}
 
 mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
@@ -32,7 +34,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 BOOST_VERSION=1.69.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
-BOOST_INCLUDE=${TMP_LIB_INCLUDE_PATH}
+BOOST_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 #${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${CARLA_BUILD_FOLDER}
 #${PWD}/${BOOST_BASENAME}-install/lib
@@ -88,7 +90,7 @@ unset BOOST_BASENAME
 RPCLIB_PATCH=v2.2.1_c1
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
-RPCLIB_LIBSTDCXX_INCLUDE=${TMP_LIB_INCLUDE_PATH}
+RPCLIB_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 #${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/include
 RPCLIB_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
 #${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/lib
@@ -140,7 +142,7 @@ unset RPCLIB_BASENAME
 GTEST_VERSION=1.8.1
 GTEST_BASENAME=gtest-${GTEST_VERSION}-${CXX_TAG}
 
-GTEST_LIBSTDCXX_INCLUDE=${TMP_LIB_INCLUDE_PATH}
+GTEST_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 #${PWD}/${GTEST_BASENAME}-libstdcxx-install/include
 GTEST_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
 #${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
@@ -233,13 +235,6 @@ set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
 
 EOL
 
-if [ "${TRAVIS}" == "true" ] ; then
-  log "Travis CI build detected: disabling PNG support."
-  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false)" >> ${CMAKE_CONFIG_FILE}.gen
-else
-  echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true)" >> ${CMAKE_CONFIG_FILE}.gen
-fi
-
 # -- Move files ----------------------------------------------------------------
 
 move_if_changed "${CMAKE_CONFIG_FILE}.gen" "${CMAKE_CONFIG_FILE}"
@@ -281,11 +276,12 @@ cmake \
 make
 make install
 
+popd >/dev/null
+rm -rf ${LIBCARLA_BUILD_PATH}
 
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
 # ==============================================================================
-popd >/dev/null
 
 log "Success!"
