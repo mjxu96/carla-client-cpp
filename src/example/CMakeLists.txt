@@ -18,4 +18,4 @@ include_directories(${PNG_INCLUDE_DIRS})
 include_directories(${TIFF_INCLUDE_DIRS})
 include_directories(${JPEG_INCLUDE_DIRS})
 
-target_link_libraries(main libcarla_client librpc libboost_filesystem ${PNG_LIBRARIES} ${TIFF_LIBRARIES} ${JPEG_LIBRARIES})
+target_link_libraries(main ${libcarla_client_LIBRARIES} ${librpc_LIBRARIES} ${libboost_filesystem_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES} ${JPEG_LIBRARIES})
