@@ -249,10 +249,40 @@ move_if_changed "${CMAKE_CONFIG_FILE}.gen" "${CMAKE_CONFIG_FILE}"
 # ==============================================================================
 rm -r cmake pkgconfig
 
+popd >/dev/null
+
+# ==============================================================================
+# -- build lib carla -----------------------------------------------------------
+# ==============================================================================
+mkdir -p ${LIBCARLA_LIB_INSTALL_PATH}
+mkdir -p ${LIBCARLA_HEADER_INSTALL_PATH}
+mkdir -p ${LIBCARLA_BUILD_PATH}
+
+echo "set(CMAKE_C_COMPILER /usr/bin/clang)" > ${LIBCARLA_BUILD_TOOLCHAIN}
+echo "set(CMAKE_CXX_COMPILER /usr/bin/clang++)" >> ${LIBCARLA_BUILD_TOOLCHAIN}
+echo "set(CMAKE_CXX_FLAGS \"\$${CMAKE_CXX_FLAGS} c++14 -pthread -fPIC -O3 -DNDEBUG\" CACHE STRING \"\" FORCE)" >> ${LIBCARLA_BUILD_TOOLCHAIN}
+
+pushd ${LIBCARLA_BUILD_PATH} >/dev/null
+
+cmake \
+  -G "Unix Makefiles" \
+  -DCMAKE_BUILD_TYPE=Client \
+  -DLIBCARLA_BUILD_RELEASE=ON \
+  -DLIBCARLA_BUILD_DEBUG=OFF \
+  -DLIBCARLA_BUILD_TEST=OFF \
+  -DCMAKE_TOOLCHAIN_FILE=${LIBCARLA_BUILD_TOOLCHAIN} \
+  -DLIBCARLA_LIB_INSTALL_PATH=${LIBCARLA_LIB_INSTALL_PATH} \
+  -DLIBCARLA_HEADER_INSTALL_PATH=${LIBCARLA_HEADER_INSTALL_PATH} \
+  ${CARLA_ROOT_FOLDER}; \
+
+make
+make install
+
+
+
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
 # ==============================================================================
 popd >/dev/null
-
 
 log "Success!"

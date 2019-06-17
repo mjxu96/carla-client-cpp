@@ -1,34 +1,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-client)
 
-# Install rpclib (install in system folder to avoid extra warnings).
-install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include/system)
-file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
-install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
-
-# Install boost headers (install in system folder to avoid extra warnings).
-# @todo Remove boost from public interface of LibCarla.client.
-install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include/system)
-file(GLOB boost_libraries "${BOOST_LIB_PATH}/*.*")
-install(FILES ${boost_libraries} DESTINATION lib)
-
-# Windows need libpng alongside with zlib to be installed
-if (WIN32)
-    # Install zlib headers.
-    file(GLOB zlib_includes "${ZLIB_INCLUDE_PATH}/*")
-    install(FILES ${zlib_includes} DESTINATION include)
-    # Install zlib lib.
-    file(GLOB zlib_libraries "${ZLIB_LIB_PATH}/*")
-    install(FILES ${zlib_libraries} DESTINATION lib)
-
-    # Install libpng headers.
-    file(GLOB pnglib_includes "${LIBPNG_INCLUDE_PATH}/*")
-    install(FILES ${pnglib_includes} DESTINATION include)
-    # Install zlib lib.
-    file(GLOB libpng_libraries "${LIBPNG_LIB_PATH}/*")
-    install(FILES ${libpng_libraries} DESTINATION lib)
-endif (WIN32)
-
+set(CMAKE_INSTALL_PREFIX ${LIBCARLA_HEADER_INSTALL_PATH})
 # Add sources.
 file(GLOB libcarla_carla_sources
     "${libcarla_source_path}/carla/*.cpp"
@@ -181,6 +154,8 @@ install(FILES ${libcarla_moodycamel_sources} DESTINATION include/moodycamel)
 # ==============================================================================
 # Create targets for debug and release in the same build type.
 # ==============================================================================
+
+set(CMAKE_INSTALL_PREFIX ${LIBCARLA_LIB_INSTALL_PATH})
 
 if (LIBCARLA_BUILD_RELEASE)
 
