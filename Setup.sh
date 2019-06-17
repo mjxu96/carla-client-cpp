@@ -254,6 +254,9 @@ popd >/dev/null
 # ==============================================================================
 # -- build lib carla -----------------------------------------------------------
 # ==============================================================================
+
+log "Begin to build carla library"
+
 mkdir -p ${LIBCARLA_LIB_INSTALL_PATH}
 mkdir -p ${LIBCARLA_HEADER_INSTALL_PATH}
 mkdir -p ${LIBCARLA_BUILD_PATH}
