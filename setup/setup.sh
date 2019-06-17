@@ -9,6 +9,11 @@ command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
   exit 1;
 }
 
+
+CARLA_FOLDER=$(cd "$(dirname "$0")"; cd ../; pwd)
+source ${CARLA_FOLDER}/setup/environment.sh
+unset CARLA_FOLDER
+
 CXX_TAG=c7
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
@@ -17,11 +22,6 @@ if [ $1 = "clang" ]; then
   export CXX=/usr/bin/clang++
   log "using clang"
 fi
-
-CARLA_FOLDER=$(cd "$(dirname "$0")"; cd ../; pwd)
-source ${CARLA_FOLDER}/setup/environment.sh
-unset CARLA_FOLDER
-
 
 # ==============================================================================
 # -- mkdir include folder ------------------------------------------------------
