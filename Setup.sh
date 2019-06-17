@@ -14,7 +14,7 @@ export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
 
 CURDIR=$(dirname "$0")
-source CURDIR/Environment.sh
+source ${CURDIR}/Environment.sh
 unset CURDIR
 
 
