@@ -1,13 +1,8 @@
 CURDIR=$(PWD)
 CARLADIR=$(CURDIR)/../../../
-BUILDDIR=$(CURDIR)/build
 BINDIR=$(CURDIR)/bin
-INSTALLDIR=$(CURDIR)/libcarla-install
-TOOLCHAIN=$(CURDIR)/ToolChain.cmake
+INSTALLDIR=$(CARLADIR)
 
-CC=/usr/bin/gcc
-CXX=/usr/bin/g++
-CXXFLAGS=-std=c++14 -pthread -fPIC -O3 -DNDEBUG
 
 define log
 	@echo "\033[1;35m$(1)\033[0m"
@@ -25,35 +20,10 @@ run: build
 
 build: $(BINDIR)/cpp_client
 
-$(BINDIR)/cpp_client: build_libcarla
+$(BINDIR)/cpp_client:
 	$(call log,Compiling C++ Client...)
 	@mkdir -p $(BINDIR)
-	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include -isystem $(INSTALLDIR)/include/system -L$(INSTALLDIR)/lib \
+	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include -L$(INSTALLDIR)/lib \
 		-o $(BINDIR)/cpp_client main.cpp \
 		-Wl,-Bstatic -lcarla_client -lrpc -lboost_filesystem -Wl,-Bdynamic \
 		-lpng -ltiff -ljpeg
-
-build_libcarla: $(TOOLCHAIN)
-	@cd $(CARLADIR); bash ./Setup.sh
-	@mkdir -p $(BUILDDIR)
-	$(call log,Compiling LibCarla.client...)
-	@{ \
-		cd $(BUILDDIR); \
-		cmake \
-			-G "Unix Makefiles" \
-			-DCMAKE_BUILD_TYPE=Client \
-			-DLIBCARLA_BUILD_RELEASE=ON \
-			-DLIBCARLA_BUILD_DEBUG=OFF \
-			-DLIBCARLA_BUILD_TEST=OFF \
-			-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN) \
-			-DCMAKE_INSTALL_PREFIX=$(INSTALLDIR) \
-			-DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
-			$(CARLADIR); \
-		make; \
-		make install | grep -v "Up-to-date:"; \
-	}
-
-$(TOOLCHAIN):
-	@echo "set(CMAKE_C_COMPILER $(CC))" > $(TOOLCHAIN)
-	@echo "set(CMAKE_CXX_COMPILER $(CXX))" >> $(TOOLCHAIN)
-	@echo "set(CMAKE_CXX_FLAGS \"\$${CMAKE_CXX_FLAGS} $(CXXFLAGS)\" CACHE STRING \"\" FORCE)" >> $(TOOLCHAIN)
