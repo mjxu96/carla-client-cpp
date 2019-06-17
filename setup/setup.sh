@@ -13,9 +13,9 @@ CXX_TAG=c7
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
 
-CARLAR_FOLDER=$(cd "$(dirname "$0")"; cd ../; pwd)
-source ${CARLAR_FOLDER}/setup/environment.sh
-unset CARLAR_FOLDER
+CARLA_FOLDER=$(cd "$(dirname "$0")"; cd ../; pwd)
+source ${CARLA_FOLDER}/setup/environment.sh
+unset CARLA_FOLDER
 
 
 # ==============================================================================
