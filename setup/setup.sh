@@ -12,6 +12,11 @@ command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
 CXX_TAG=c7
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
+if [ $1 = "clang" ]; then
+  export CC=/usr/bin/clang
+  export CXX=/usr/bin/clang++
+  log "using clang"
+fi
 
 CARLA_FOLDER=$(cd "$(dirname "$0")"; cd ../; pwd)
 source ${CARLA_FOLDER}/setup/environment.sh
@@ -239,8 +244,8 @@ mkdir -p ${LIBCARLA_LIB_INSTALL_PATH}
 mkdir -p ${LIBCARLA_HEADER_INSTALL_PATH}
 mkdir -p ${LIBCARLA_BUILD_PATH}
 
-echo "set(CMAKE_C_COMPILER /usr/bin/clang)" > ${LIBCARLA_BUILD_TOOLCHAIN}
-echo "set(CMAKE_CXX_COMPILER /usr/bin/clang++)" >> ${LIBCARLA_BUILD_TOOLCHAIN}
+echo "set(CMAKE_C_COMPILER "${CC}")" > ${LIBCARLA_BUILD_TOOLCHAIN}
+echo "set(CMAKE_CXX_COMPILER "${CXX}")" >> ${LIBCARLA_BUILD_TOOLCHAIN}
 echo "set(CMAKE_CXX_FLAGS \"\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC -O3 -DNDEBUG\" CACHE STRING \"\" FORCE)" >> ${LIBCARLA_BUILD_TOOLCHAIN}
 
 pushd ${LIBCARLA_BUILD_PATH} >/dev/null
