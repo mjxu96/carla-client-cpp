@@ -12,8 +12,12 @@
 #include "carla/client/Map.h"
 #include "carla/client/Client.h"
 #include "carla/client/World.h"
+#include "carla/client/BlueprintLibrary.h"
 #include "carla/geom/Location.h"
 #include "carla/client/Waypoint.h"
+#include "carla/client/Actor.h"
+#include "carla/client/ActorList.h"
+#include "carla/client/TrafficLight.h"
 
 #include <boost/shared_ptr.hpp>
 
@@ -24,6 +28,7 @@
 #include <cmath>
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 namespace minjun {
 

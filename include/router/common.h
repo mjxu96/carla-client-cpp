@@ -15,6 +15,7 @@ namespace minjun {
 
 class Point3d {
  public:
+  Point3d() = default;
   Point3d(double x, double y, double z) : x_(x), y_(y), z_(z) {}
   double x_{0.0};
   double y_{0.0};
@@ -23,7 +24,7 @@ class Point3d {
     return x_ == p.x_ && y_ == p.y_ && z_ == p.z_;
   }
 
-  std::string ToString() {
+  std::string ToString() const {
     return std::string("[") + std::to_string(x_) + std::string(", ") +
                               std::to_string(y_) + std::string(", ") +
                               std::to_string(z_) + std::string("]");
