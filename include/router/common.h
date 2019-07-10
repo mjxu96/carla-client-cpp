@@ -16,10 +16,10 @@ namespace minjun {
 class Point3d {
  public:
   Point3d() = default;
-  Point3d(double x, double y, double z) : x_(x), y_(y), z_(z) {}
-  double x_{0.0};
-  double y_{0.0};
-  double z_{0.0};
+  Point3d(float x, float y, float z) : x_(x), y_(y), z_(z) {}
+  float x_{0.0};
+  float y_{0.0};
+  float z_{0.0};
   bool operator==(const Point3d& p) const {
     return x_ == p.x_ && y_ == p.y_ && z_ == p.z_;
   }

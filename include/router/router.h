@@ -45,7 +45,7 @@ private:
   Point3d start_point_;
   Point3d end_point_;
 
-  double point_interval_{2.0};
+  double point_interval_{2};
   double distance_threshold_{20.0};
 };
   

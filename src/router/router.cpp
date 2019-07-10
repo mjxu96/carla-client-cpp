@@ -10,6 +10,20 @@ using namespace minjun;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
+std::string DBGPrint(const carla::geom::Location& location) {
+    return std::string("[") + std::to_string(location.x) + std::string(", ") +
+                              std::to_string(location.y) + std::string(", ") +
+                              std::to_string(location.z) + std::string("]");
+  
+}
+
+double Distance(const carla::geom::Location& p1, const carla::geom::Location& p2) {
+  return std::sqrt(std::pow((p1.x - p2.x), 2.0) +
+                   std::pow((p1.y - p2.y), 2.0) +
+                   std::pow((p1.z - p2.z), 2.0) );
+
+}
+
 double Distance(const Point3d& p1, const Point3d& p2) {
   return std::sqrt(std::pow((p1.x_ - p2.x_), 2.0) +
                    std::pow((p1.y_ - p2.y_), 2.0) +
@@ -49,37 +63,48 @@ std::vector<Point3d> Router::BFS() {
     carla::geom::Location location(current_point.x_, current_point.y_, current_point.z_);
     auto current_waypoint = map_ptr_->GetWaypoint(location);
     auto waypoints = current_waypoint->GetNext(point_interval_);
-    //if (waypoints.size() > 1) {
-    //  tmp.push_back(current_point);
-    //}
-    /*
-      if (waypoints.size() > 1) {
-      Point3d point0(waypoints[0]->GetTransform().location.x,
-                    waypoints[0]->GetTransform().location.y,  
-                    waypoints[0]->GetTransform().location.z);  
-                    tmp.push_back(point0);
-      Point3d point1(waypoints[1]->GetTransform().location.x,
-                    waypoints[1]->GetTransform().location.y,  
-                    waypoints[1]->GetTransform().location.z);  
-                    tmp.push_back(point1);
+      /*
+    if (waypoints.size() > 1) {
+      std::cout << "location : " << DBGPrint(location) << std::endl;
+      std::cout << "currentw : " << DBGPrint(current_waypoint->GetTransform().location) << std::endl;
+      std::cout << "waypoint1: " << DBGPrint(waypoints[0]->GetTransform().location) << std::endl;
+      std::cout << "waypoint2: " << DBGPrint(waypoints[1]->GetTransform().location) << std::endl;
+      double s1 = 0.0, s2 = 0.0;
+      auto p1_p = waypoints[0]->GetTransform().location;
+      auto p2_p = waypoints[1]->GetTransform().location;
+      auto waypoint1 = waypoints[0];
+      auto waypoint2 = waypoints[1];
+      for (int i = 0; i < 20; i++) {
+        waypoint1 = waypoint1->GetNext(point_interval_)[0];
+        s1 += Distance(p1_p, waypoint1->GetTransform().location);
+        waypoint2 = waypoint2->GetNext(point_interval_)[0];
+        s2 += Distance(p2_p, waypoint2->GetTransform().location);
+        p1_p = waypoint1->GetTransform().location;
+        p2_p = waypoint2->GetTransform().location;
       }
+      std::cout << "s1: " << s1 << ", s2: " << s2 << std::endl;
+      std::cout << "waypoint1 next waypoint: " << DBGPrint(waypoints[0]->GetNext(point_interval_)[0]->GetTransform().location) << std::endl;
+      std::cout << "waypoint2 next waypoint: " << DBGPrint(waypoints[1]->GetNext(point_interval_)[0]->GetTransform().location) << std::endl;
+      std::cout << "waypoint1 next next waypoint: " << DBGPrint(waypoints[0]->GetNext(point_interval_)[0]->GetNext(point_interval_)[0]->GetTransform().location) << std::endl;
+      std::cout << "waypoint2 next next waypoint: " << DBGPrint(waypoints[1]->GetNext(point_interval_)[0]->GetNext(point_interval_)[0]->GetTransform().location) << std::endl;
+      std::cout << "waypoint1 next next next waypoint: " << DBGPrint(waypoints[0]->GetNext(point_interval_)[0]->GetNext(point_interval_)[0]->GetNext(point_interval_)[0]->GetTransform().location) << std::endl;
+      std::cout << "waypoint2 next next next waypoint: " << DBGPrint(waypoints[1]->GetNext(point_interval_)[0]->GetNext(point_interval_)[0]->GetNext(point_interval_)[0]->GetTransform().location) << std::endl;
+      std::cout << "currentw road id: " << ((*current_waypoint).GetRoadId()) << std::endl;
+      std::cout << "waypoint1 road id: " << ((*waypoints[0]).GetRoadId()) << std::endl;
+      std::cout << "waypoint2 road id: " << ((*waypoints[1]).GetRoadId()) << std::endl;
+      std::cout << "waypoint1 id == waypoint2 id? " << (waypoints[0]->GetId() == waypoints[1]->GetId() ? "true" : "false") << std::endl;
+    }
       */
     for (const auto& waypoint : waypoints) {
+      if (traveled_points.find(waypoint->GetId()) != traveled_points.end()) {
+        continue;
+      }
       Point3d point((*waypoint).GetTransform().location.x,
                     (*waypoint).GetTransform().location.y,  
                     (*waypoint).GetTransform().location.z);  
-      tmp.push_back(point);
-      if (traveled_points.find(waypoint->GetId()) != traveled_points.end()) {
-      //Point3d point((*waypoint).GetTransform().location.x,
-      //              (*waypoint).GetTransform().location.y,  
-      //              (*waypoint).GetTransform().location.z);  
-      //              tmp.push_back(point);
-        continue;
-      }
       auto current_points_copy = current_points;
       traveled_points.insert({waypoint->GetId(), point});
       current_points_copy.push_back(point);
-      tmp.push_back(point);
       point_queue.push({point, current_points_copy});
     }
   }
@@ -89,7 +114,7 @@ std::vector<Point3d> Router::BFS() {
 void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr) {
   auto actors = world_ptr.GetActors();
   for (const auto& actor : *actors) {
-    std::cout << actor->GetTypeId() << std::endl;
+    //std::cout << actor->GetTypeId() << std::endl;
     if (actor->GetTypeId() == "traffic.traffic_light") {
       (boost::static_pointer_cast<carla::client::TrafficLight>(actor))->SetState(carla::rpc::TrafficLightState::Green);
       (boost::static_pointer_cast<carla::client::TrafficLight>(actor))->SetGreenTime(100.0);
@@ -115,7 +140,7 @@ int main(int argc, char* argv[]) {
   SetAllTrafficLightToBeGreen(world);
 
   size_t p1_i = 0;
-  size_t p2_i = size / 3;
+  size_t p2_i = size - 1;
   Point3d p1(transforms[p1_i].location.x,
              transforms[p1_i].location.y,
              transforms[p1_i].location.z);
