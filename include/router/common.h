@@ -26,20 +26,20 @@ class Point3d {
 
   std::string ToString() const {
     return std::string("[") + std::to_string(x_) + std::string(", ") +
-                              std::to_string(y_) + std::string(", ") +
-                              std::to_string(z_) + std::string("]");
+           std::to_string(y_) + std::string(", ") + std::to_string(z_) +
+           std::string("]");
   }
-
 };
 
 }  // namespace minjun
 
 namespace std {
-  template <>
-  struct hash<minjun::Point3d> {
-    size_t operator() (const minjun::Point3d& p) const {
-      return (hash<double>()(p.x_)) ^ (hash<double>()(p.y_)) ^ (hash<double>()(p.z_));
-    }
-  };
-}
+template <>
+struct hash<minjun::Point3d> {
+  size_t operator()(const minjun::Point3d& p) const {
+    return (hash<double>()(p.x_)) ^ (hash<double>()(p.y_)) ^
+           (hash<double>()(p.z_));
+  }
+};
+}  // namespace std
 #endif
