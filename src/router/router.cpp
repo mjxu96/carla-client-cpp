@@ -17,6 +17,15 @@ std::string DBGPrint(const carla::geom::Location& location) {
   
 }
 
+std::vector<Point3d> ConvertFromWaypointToPoint3d(const std::vector<boost::shared_ptr<carla::client::Waypoint>>& waypoints) {
+  std::vector<Point3d> result;
+  for (const auto& waypoint_ptr : waypoints) {
+    auto location = waypoint_ptr->GetTransform().location;
+    result.emplace_back(location.x, location.y, location.z);
+  }
+  return result;
+}
+
 double Distance(const carla::geom::Location& p1, const carla::geom::Location& p2) {
   return std::sqrt(std::pow((p1.x - p2.x), 2.0) +
                    std::pow((p1.y - p2.y), 2.0) +
@@ -44,6 +53,41 @@ std::vector<Point3d> Router::GetRoutePoints() {
 }
 
 std::vector<Point3d> Router::BFS() {
+  std::vector<Point3d> result;
+  std::unordered_set<uint64_t> travelled_points;
+  std::queue<std::pair<boost::shared_ptr<carla::client::Waypoint>, std::vector<boost::shared_ptr<carla::client::Waypoint>>>> point_queue;
+  auto start_waypoint = map_ptr_->GetWaypoint(carla::geom::Location(start_point_.x_, start_point_.y_, start_point_.z_));
+  auto end_waypoint = map_ptr_->GetWaypoint(carla::geom::Location(end_point_.x_, end_point_.y_, end_point_.z_));
+  auto end_lane_id = end_waypoint->GetLaneId();
+  auto end_location = carla::geom::Location(end_point_.x_, end_point_.y_, end_point_.z_);
+  point_queue.push({start_waypoint, std::vector<boost::shared_ptr<carla::client::Waypoint>>()});
+  while (!point_queue.empty()) {
+    auto current_waypoint = point_queue.front().first;
+    auto current_waypoints = point_queue.front().second;
+    point_queue.pop();
+    if (Distance(current_waypoint->GetTransform().location, end_location) < distance_threshold_) {
+      auto current_lane_id = current_waypoint->GetLaneId();
+      if (current_lane_id == end_lane_id) {
+        std::cout << "size: " << current_waypoints.size() << std::endl;
+        return ConvertFromWaypointToPoint3d(current_waypoints);
+      }
+    }
+    auto next_waypoints = current_waypoint->GetNext(point_interval_);
+    for (const auto& next_waypoint : next_waypoints) {
+      uint64_t id = next_waypoint->GetId();
+      if (travelled_points.find(id) != travelled_points.end()) {
+        continue;
+      }
+      travelled_points.insert(id);
+      auto current_waypoints_copy = current_waypoints;
+      current_waypoints_copy.push_back(next_waypoint);
+      point_queue.push({next_waypoint, current_waypoints_copy});
+    }
+  }
+  return result;
+}
+      /*
+std::vector<Point3d> Router::BFS() {
   int count = 0;
   std::vector<Point3d> tmp;
   std::unordered_map<uint64_t, Point3d> traveled_points;
@@ -63,7 +107,6 @@ std::vector<Point3d> Router::BFS() {
     carla::geom::Location location(current_point.x_, current_point.y_, current_point.z_);
     auto current_waypoint = map_ptr_->GetWaypoint(location);
     auto waypoints = current_waypoint->GetNext(point_interval_);
-      /*
     if (waypoints.size() > 1) {
       std::cout << "location : " << DBGPrint(location) << std::endl;
       std::cout << "currentw : " << DBGPrint(current_waypoint->GetTransform().location) << std::endl;
@@ -75,9 +118,9 @@ std::vector<Point3d> Router::BFS() {
       auto waypoint1 = waypoints[0];
       auto waypoint2 = waypoints[1];
       for (int i = 0; i < 20; i++) {
-        waypoint1 = waypoint1->GetNext(point_interval_)[0];
+        waypoint1 = map_ptr_->GetWaypoint(p1_p)->GetNext(point_interval_)[0];// waypoint1->GetNext(point_interval_)[0];
         s1 += Distance(p1_p, waypoint1->GetTransform().location);
-        waypoint2 = waypoint2->GetNext(point_interval_)[0];
+        waypoint2 = map_ptr_->GetWaypoint(p2_p)->GetNext(point_interval_)[0];// waypoint2->GetNext(point_interval_)[0];
         s2 += Distance(p2_p, waypoint2->GetTransform().location);
         p1_p = waypoint1->GetTransform().location;
         p2_p = waypoint2->GetTransform().location;
@@ -94,7 +137,6 @@ std::vector<Point3d> Router::BFS() {
       std::cout << "waypoint2 road id: " << ((*waypoints[1]).GetRoadId()) << std::endl;
       std::cout << "waypoint1 id == waypoint2 id? " << (waypoints[0]->GetId() == waypoints[1]->GetId() ? "true" : "false") << std::endl;
     }
-      */
     for (const auto& waypoint : waypoints) {
       if (traveled_points.find(waypoint->GetId()) != traveled_points.end()) {
         continue;
@@ -110,6 +152,7 @@ std::vector<Point3d> Router::BFS() {
   }
   return std::vector<Point3d>();
 }
+      */
 
 void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr) {
   auto actors = world_ptr.GetActors();
@@ -154,7 +197,7 @@ int main(int argc, char* argv[]) {
   vehicle1->SetSimulatePhysics(false);
   Router router(p1, p2, map);
   auto points = router.GetRoutePoints();
-  std::cout << "size: " << points.size() << std::endl;
+  //std::cout << "size: " << points.size() << std::endl;
   for (const auto& point : points) {
     vehicle1->SetLocation(carla::geom::Location(point.x_, point.y_, point.z_));
     std::this_thread::sleep_for(50ms);
