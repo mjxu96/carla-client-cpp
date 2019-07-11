@@ -41,6 +41,7 @@ class Router {
   void SetPointInterval(double interval);
 
  private:
+  std::vector<Point3d> AStart();
   std::vector<Point3d> BFS();
   boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
   Point3d start_point_;

@@ -48,6 +48,11 @@ void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
 std::vector<Point3d> Router::GetRoutePoints() { return BFS(); }
 
+std::vector<Point3d> Router::AStart() {
+  std::vector<Point3d> result;
+  return result;
+}
+
 std::vector<Point3d> Router::BFS() {
   std::vector<Point3d> result;
   std::unordered_set<uint64_t> travelled_points;
