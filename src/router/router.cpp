@@ -32,6 +32,12 @@ double Distance(const carla::geom::Location& p1,
                    std::pow((p1.z - p2.z), 2.0));
 }
 
+
+double Distance(const carla::client::Waypoint& p1,
+                const carla::client::Waypoint& p2) {
+  return Distance(p1.GetTransform().location, p2.GetTransform().location);
+}
+
 double Distance(const Point3d& p1, const Point3d& p2) {
   return std::sqrt(std::pow((p1.x_ - p2.x_), 2.0) +
                    std::pow((p1.y_ - p2.y_), 2.0) +
@@ -48,7 +54,7 @@ void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
 std::vector<Point3d> Router::GetRoutePoints() { return BFS(); }
 
-std::vector<Point3d> Router::AStart() {
+std::vector<Point3d> Router::AStar() {
   std::vector<Point3d> result;
   return result;
 }
