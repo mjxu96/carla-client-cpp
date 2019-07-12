@@ -24,10 +24,10 @@ std::vector<Point3d> Router::GetRoutePoints() {
   auto res1 = AStar();
   auto astar_end = std::chrono::system_clock::now();
   auto res2 = BFS();
+  auto bfs_end = std::chrono::system_clock::now();
   if (CompareRouterResults(res1, res2)) {
     std::cout << "results same" << std::endl;
   }
-  auto bfs_end = std::chrono::system_clock::now();
   std::chrono::duration<double> astar_duration = astar_end - astar_start;
   std::chrono::duration<double> bfs_duration = bfs_end - astar_end;
   auto astart_time = astar_duration.count();
