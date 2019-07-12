@@ -38,11 +38,17 @@ double Distance(const carla::client::Waypoint& p1,
   return Distance(p1.GetTransform().location, p2.GetTransform().location);
 }
 
+double Distance(const boost::shared_ptr<carla::client::Waypoint>& p1,
+                const boost::shared_ptr<carla::client::Waypoint>& p2) {
+  return Distance(*p1, *p2);
+}
+
 double Distance(const Point3d& p1, const Point3d& p2) {
   return std::sqrt(std::pow((p1.x_ - p2.x_), 2.0) +
                    std::pow((p1.y_ - p2.y_), 2.0) +
                    std::pow((p1.z_ - p2.z_), 2.0));
 }
+
 
 Router::Router(Point3d start_point, Point3d end_point,
                boost::shared_ptr<carla::client::Map> map_ptr)
@@ -52,9 +58,53 @@ Router::Router(Point3d start_point, Point3d end_point,
 
 void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
-std::vector<Point3d> Router::GetRoutePoints() { return BFS(); }
+std::vector<Point3d> Router::GetRoutePoints() { 
+  return AStar();
+  //return BFS();
+}
 
 std::vector<Point3d> Router::AStar() {
+  std::set<Node, NodeComparator> open_set;
+  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>, boost::shared_ptr<carla::client::Waypoint>> waypoint_predecessor; 
+  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>, double> g_score; 
+  auto start_waypoint = map_ptr_->GetWaypoint(
+      carla::geom::Location(start_point_.x_, start_point_.y_, start_point_.z_));
+  auto end_waypoint = map_ptr_->GetWaypoint(
+      carla::geom::Location(end_point_.x_, end_point_.y_, end_point_.z_));
+  g_score.insert({start_waypoint, 0.0});
+  Node start_node(start_waypoint, Distance(start_waypoint, end_waypoint));
+  open_set.insert(start_node);
+
+  while (!open_set.empty()) {
+    auto current_node_it = open_set.begin();
+    auto current_waypoint = current_node_it->GetWaypoint();
+    if (Distance(end_waypoint, current_waypoint) < distance_threshold_) {
+      std::vector<boost::shared_ptr<carla::client::Waypoint>> result_waypoints;
+      while (waypoint_predecessor.find(current_waypoint) != waypoint_predecessor.end()) {
+        result_waypoints.push_back(current_waypoint);
+        current_waypoint = (waypoint_predecessor.find(current_waypoint)->first);
+      }
+      return ConvertFromWaypointToPoint3d(result_waypoints);
+    }
+
+    open_set.erase(current_node_it);
+    auto next_waypoints = current_waypoint->GetNext(point_interval_);
+    for (const auto& next_waypoint : next_waypoints) {
+      double tmp_g_score = g_score[current_waypoint] + Distance(next_waypoint, current_waypoint);
+      if (g_score.find(next_waypoint) == g_score.end() ||
+          g_score[next_waypoint] > tmp_g_score) {
+        g_score[next_waypoint] = tmp_g_score;
+        waypoint_predecessor[next_waypoint] = current_waypoint;
+        Node next_node(next_waypoint, tmp_g_score + Distance(end_waypoint, next_waypoint));
+        auto next_node_it = open_set.find(next_node); 
+        if (next_node_it != open_set.end()) {
+          open_set.erase(next_node_it);
+        }
+        open_set.insert(next_node);
+      }
+    }
+  }
+
   std::vector<Point3d> result;
   return result;
 }

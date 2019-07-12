@@ -7,9 +7,14 @@
 #ifndef MINJUN_ROUTER_COMMON_H_
 #define MINJUN_ROUTER_COMMON_H_
 
+#include "carla/client/Waypoint.h"
+
+#include <boost/shared_ptr.hpp>
 #include <boost/geometry.hpp>
+
 #include <functional>
 #include <string>
+#include <limits>
 
 namespace minjun {
 
@@ -28,6 +33,28 @@ class Point3d {
     return std::string("[") + std::to_string(x_) + std::string(", ") +
            std::to_string(y_) + std::string(", ") + std::to_string(z_) +
            std::string("]");
+  }
+};
+
+class Node {
+public:
+  Node() = default;
+  Node(boost::shared_ptr<carla::client::Waypoint> waypoint, double distance) :
+    waypoint_(std::move(waypoint)), distance_(distance) {}
+  boost::shared_ptr<carla::client::Waypoint> GetWaypoint() const {return waypoint_;}
+  double GetDistance() const {return distance_;}
+  
+private:
+  boost::shared_ptr<carla::client::Waypoint> waypoint_{nullptr};
+  double distance_{std::numeric_limits<double>::max()};
+};
+
+struct NodeComparator {
+  bool operator()(const Node& n1, const Node& n2) {
+    if (n1.GetWaypoint()->GetId() == n2.GetWaypoint()->GetId()) {
+      return false;
+    }
+    return (n1.GetDistance() < n2.GetDistance());
   }
 };
 

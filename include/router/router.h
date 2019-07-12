@@ -20,6 +20,7 @@
 #include "carla/geom/Location.h"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 
 #include <chrono>
 #include <cmath>
@@ -27,6 +28,7 @@
 #include <queue>
 #include <thread>
 #include <unordered_set>
+#include <set>
 #include <utility>
 #include <vector>
 
