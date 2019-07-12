@@ -79,12 +79,6 @@ std::vector<Point3d> Router::AStar() {
     auto current_node_it = open_set.begin();
     auto current_waypoint = current_node_it->GetWaypoint();
     open_set.erase(current_node_it);
-    if (open_set.size() >= 2) {
-      double d1 = current_node_it->GetDistance();
-      current_node_it++;
-      double d2 = current_node_it->GetDistance();
-      std::cout << (d1 < d2 ? "true" : "false") << std::endl;
-    }
     if (Distance(end_waypoint, current_waypoint) < distance_threshold_) {
       std::cout << "found" << std::endl;
       std::vector<boost::shared_ptr<carla::client::Waypoint>> result_waypoints;
@@ -99,12 +93,6 @@ std::vector<Point3d> Router::AStar() {
 
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
     for (const auto& next_waypoint : next_waypoints) {
-
-      // dbg use
-      if (actor_ != nullptr) {
-        actor_->SetLocation(next_waypoint->GetTransform().location);
-        std::this_thread::sleep_for(100ms);
-      }
 
       double tmp_g_score = g_score[current_waypoint] + Distance(next_waypoint, current_waypoint);
       if (g_score.find(next_waypoint) == g_score.end() ||
@@ -185,6 +173,9 @@ void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr) {
 }
 
 int main(int argc, char* argv[]) {
+  if (argc < 2) {
+    std::cout << "error, not enough params" << std::endl;
+  }
   std::string host(argv[1]);
   uint16_t port(2000u);
   auto client = carla::client::Client(host, port);
@@ -202,6 +193,12 @@ int main(int argc, char* argv[]) {
 
   size_t p1_i = 0;
   size_t p2_i = size / 2;
+  if (argc >= 3) {
+    p1_i = std::stoi(argv[2]) % transforms.size();
+    if (argc >= 4) {
+      p2_i = std::stoi(argv[3]) % transforms.size();
+    }
+  }
   Point3d p1(transforms[p1_i].location.x, transforms[p1_i].location.y,
              transforms[p1_i].location.z);
   Point3d p2(transforms[p2_i].location.x, transforms[p2_i].location.y,
@@ -214,11 +211,13 @@ int main(int argc, char* argv[]) {
   Router router(p1, p2, map);
   
   // dbg use
-  router.DbgSetActor(vehicle1);
+  // router.DbgSetActor(vehicle1);
+
   auto points = router.GetRoutePoints();
+
   for (const auto& point : points) {
-    //vehicle1->SetLocation(carla::geom::Location(point.x_, point.y_, point.z_));
-    //std::this_thread::sleep_for(50ms);
+    vehicle1->SetLocation(carla::geom::Location(point.x_, point.y_, point.z_));
+    std::this_thread::sleep_for(50ms);
   }
   std::cin.ignore();
   std::cin.get();

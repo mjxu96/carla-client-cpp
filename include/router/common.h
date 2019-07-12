@@ -53,6 +53,10 @@ struct NodeComparator {
   bool operator()(const Node& n1, const Node& n2) {
     if (n1.GetWaypoint()->GetId() == n2.GetWaypoint()->GetId()) {
       return false;
+    } else {
+      if (n1.GetDistance() == n2.GetDistance()) {
+        return n1.GetWaypoint()->GetId() < n2.GetWaypoint()->GetId();
+      }
     }
     return (n1.GetDistance() < n2.GetDistance());
   }
