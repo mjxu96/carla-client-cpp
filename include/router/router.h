@@ -42,6 +42,9 @@ class Router {
   std::vector<Point3d> GetRoutePoints();
   void SetPointInterval(double interval);
 
+  // debug use
+  void DbgSetActor(boost::shared_ptr<carla::client::Actor> actor);
+
  private:
   std::vector<Point3d> AStar();
   std::vector<Point3d> BFS();
@@ -51,6 +54,10 @@ class Router {
 
   double point_interval_{2};
   double distance_threshold_{20.0};
+
+  // debug use
+  boost::shared_ptr<carla::client::Actor> actor_{nullptr};
+  
 };
 
 }  // namespace minjun

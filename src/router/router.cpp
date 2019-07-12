@@ -78,18 +78,34 @@ std::vector<Point3d> Router::AStar() {
   while (!open_set.empty()) {
     auto current_node_it = open_set.begin();
     auto current_waypoint = current_node_it->GetWaypoint();
+    open_set.erase(current_node_it);
+    if (open_set.size() >= 2) {
+      double d1 = current_node_it->GetDistance();
+      current_node_it++;
+      double d2 = current_node_it->GetDistance();
+      std::cout << (d1 < d2 ? "true" : "false") << std::endl;
+    }
     if (Distance(end_waypoint, current_waypoint) < distance_threshold_) {
+      std::cout << "found" << std::endl;
       std::vector<boost::shared_ptr<carla::client::Waypoint>> result_waypoints;
       while (waypoint_predecessor.find(current_waypoint) != waypoint_predecessor.end()) {
         result_waypoints.push_back(current_waypoint);
-        current_waypoint = (waypoint_predecessor.find(current_waypoint)->first);
+        current_waypoint = (waypoint_predecessor.find(current_waypoint)->second);
       }
-      return ConvertFromWaypointToPoint3d(result_waypoints);
+      auto result = ConvertFromWaypointToPoint3d(result_waypoints); 
+      std::reverse(result.begin(), result.end());
+      return result;
     }
 
-    open_set.erase(current_node_it);
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
     for (const auto& next_waypoint : next_waypoints) {
+
+      // dbg use
+      if (actor_ != nullptr) {
+        actor_->SetLocation(next_waypoint->GetTransform().location);
+        std::this_thread::sleep_for(100ms);
+      }
+
       double tmp_g_score = g_score[current_waypoint] + Distance(next_waypoint, current_waypoint);
       if (g_score.find(next_waypoint) == g_score.end() ||
           g_score[next_waypoint] > tmp_g_score) {
@@ -152,6 +168,10 @@ std::vector<Point3d> Router::BFS() {
   return result;
 }
 
+void Router::DbgSetActor(boost::shared_ptr<carla::client::Actor> actor) {
+  actor_ = std::move(actor);
+}
+
 void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr) {
   auto actors = world_ptr.GetActors();
   for (const auto& actor : *actors) {
@@ -192,10 +212,13 @@ int main(int argc, char* argv[]) {
   auto vehicle2 = world.SpawnActor(vehicle_bp, transforms[p2_i]);
   vehicle1->SetSimulatePhysics(false);
   Router router(p1, p2, map);
+  
+  // dbg use
+  router.DbgSetActor(vehicle1);
   auto points = router.GetRoutePoints();
   for (const auto& point : points) {
-    vehicle1->SetLocation(carla::geom::Location(point.x_, point.y_, point.z_));
-    std::this_thread::sleep_for(50ms);
+    //vehicle1->SetLocation(carla::geom::Location(point.x_, point.y_, point.z_));
+    //std::this_thread::sleep_for(50ms);
   }
   std::cin.ignore();
   std::cin.get();
