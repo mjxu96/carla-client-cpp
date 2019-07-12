@@ -7,63 +7,9 @@
 #include "router/router.h"
 
 using namespace minjun;
+using namespace minjun::utils;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
-
-bool CompareRouterResults(const std::vector<Point3d>& p1s, const std::vector<Point3d>& p2s) {
-  if (p1s.size() != p2s.size()) {
-    std::cout << "sizes are not the same" << std::endl;
-    std::cout << "size 1: " << p1s.size() << "  size 2: " << p2s.size() << std::endl;
-    return false;
-  }
-  for (size_t i = 0; i < p1s.size(); i++) {
-    if (!(p1s[i] == p2s[i])) {
-      std::cout << "No. " << i << " Point not same" << std::endl;
-      return false;
-    }
-  }
-  return true;
-}
-
-std::string DBGPrint(const carla::geom::Location& location) {
-  return std::string("[") + std::to_string(location.x) + std::string(", ") +
-         std::to_string(location.y) + std::string(", ") +
-         std::to_string(location.z) + std::string("]");
-}
-
-std::vector<Point3d> ConvertFromWaypointToPoint3d(
-    const std::vector<boost::shared_ptr<carla::client::Waypoint>>& waypoints) {
-  std::vector<Point3d> result;
-  for (const auto& waypoint_ptr : waypoints) {
-    auto location = waypoint_ptr->GetTransform().location;
-    result.emplace_back(location.x, location.y, location.z);
-  }
-  return result;
-}
-
-double Distance(const carla::geom::Location& p1,
-                const carla::geom::Location& p2) {
-  return std::sqrt(std::pow((p1.x - p2.x), 2.0) + std::pow((p1.y - p2.y), 2.0) +
-                   std::pow((p1.z - p2.z), 2.0));
-}
-
-
-double Distance(const carla::client::Waypoint& p1,
-                const carla::client::Waypoint& p2) {
-  return Distance(p1.GetTransform().location, p2.GetTransform().location);
-}
-
-double Distance(const boost::shared_ptr<carla::client::Waypoint>& p1,
-                const boost::shared_ptr<carla::client::Waypoint>& p2) {
-  return Distance(*p1, *p2);
-}
-
-double Distance(const Point3d& p1, const Point3d& p2) {
-  return std::sqrt(std::pow((p1.x_ - p2.x_), 2.0) +
-                   std::pow((p1.y_ - p2.y_), 2.0) +
-                   std::pow((p1.z_ - p2.z_), 2.0));
-}
-
 
 Router::Router(Point3d start_point, Point3d end_point,
                boost::shared_ptr<carla::client::Map> map_ptr)
@@ -73,7 +19,7 @@ Router::Router(Point3d start_point, Point3d end_point,
 
 void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
-std::vector<Point3d> Router::GetRoutePoints() { 
+std::vector<Point3d> Router::GetRoutePoints() {
   auto astar_start = std::chrono::system_clock::now();
   auto res1 = AStar();
   auto astar_end = std::chrono::system_clock::now();
@@ -82,20 +28,23 @@ std::vector<Point3d> Router::GetRoutePoints() {
     std::cout << "results same" << std::endl;
   }
   auto bfs_end = std::chrono::system_clock::now();
-  std::chrono::duration<double> astar_duration = astar_end - astar_start; 
-  std::chrono::duration<double> bfs_duration = bfs_end - astar_end; 
+  std::chrono::duration<double> astar_duration = astar_end - astar_start;
+  std::chrono::duration<double> bfs_duration = bfs_end - astar_end;
   auto astart_time = astar_duration.count();
   auto bfs_time = bfs_duration.count();
   std::cout << "Astar time: " << astart_time << std::endl;
   std::cout << "BFS time: " << bfs_time << std::endl;
   return res1;
-  //return BFS();
+  // return BFS();
 }
 
 std::vector<Point3d> Router::AStar() {
   std::set<Node, NodeComparator> open_set;
-  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>, boost::shared_ptr<carla::client::Waypoint>> waypoint_predecessor; 
-  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>, double> g_score; 
+  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>,
+                       boost::shared_ptr<carla::client::Waypoint>>
+      waypoint_predecessor;
+  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>, double>
+      g_score;
   auto start_waypoint = map_ptr_->GetWaypoint(
       carla::geom::Location(start_point_.x_, start_point_.y_, start_point_.z_));
   auto end_waypoint = map_ptr_->GetWaypoint(
@@ -111,25 +60,28 @@ std::vector<Point3d> Router::AStar() {
     if (Distance(end_waypoint, current_waypoint) < distance_threshold_) {
       std::cout << "found" << std::endl;
       std::vector<boost::shared_ptr<carla::client::Waypoint>> result_waypoints;
-      while (waypoint_predecessor.find(current_waypoint) != waypoint_predecessor.end()) {
+      while (waypoint_predecessor.find(current_waypoint) !=
+             waypoint_predecessor.end()) {
         result_waypoints.push_back(current_waypoint);
-        current_waypoint = (waypoint_predecessor.find(current_waypoint)->second);
+        current_waypoint =
+            (waypoint_predecessor.find(current_waypoint)->second);
       }
-      auto result = ConvertFromWaypointToPoint3d(result_waypoints); 
+      auto result = ConvertFromWaypointToPoint3d(result_waypoints);
       std::reverse(result.begin(), result.end());
       return result;
     }
 
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
     for (const auto& next_waypoint : next_waypoints) {
-
-      double tmp_g_score = g_score[current_waypoint] + Distance(next_waypoint, current_waypoint);
+      double tmp_g_score =
+          g_score[current_waypoint] + Distance(next_waypoint, current_waypoint);
       if (g_score.find(next_waypoint) == g_score.end() ||
           g_score[next_waypoint] > tmp_g_score) {
         g_score[next_waypoint] = tmp_g_score;
         waypoint_predecessor[next_waypoint] = current_waypoint;
-        Node next_node(next_waypoint, tmp_g_score + Distance(end_waypoint, next_waypoint));
-        auto next_node_it = open_set.find(next_node); 
+        Node next_node(next_waypoint,
+                       tmp_g_score + Distance(end_waypoint, next_waypoint));
+        auto next_node_it = open_set.find(next_node);
         if (next_node_it != open_set.end()) {
           open_set.erase(next_node_it);
         }
@@ -164,9 +116,9 @@ std::vector<Point3d> Router::BFS() {
     point_queue.pop();
     if (Distance(current_waypoint->GetTransform().location, end_location) <
         distance_threshold_) {
-      //auto current_lane_id = current_waypoint->GetLaneId();
-      //auto current_road_id = current_waypoint->GetRoadId();
-      //if (current_lane_id == end_lane_id && current_road_id == end_road_id) {
+      // auto current_lane_id = current_waypoint->GetLaneId();
+      // auto current_road_id = current_waypoint->GetRoadId();
+      // if (current_lane_id == end_lane_id && current_road_id == end_road_id) {
       return ConvertFromWaypointToPoint3d(current_waypoints);
       //}
     }
@@ -187,18 +139,6 @@ std::vector<Point3d> Router::BFS() {
 
 void Router::DbgSetActor(boost::shared_ptr<carla::client::Actor> actor) {
   actor_ = std::move(actor);
-}
-
-void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr) {
-  auto actors = world_ptr.GetActors();
-  for (const auto& actor : *actors) {
-    if (actor->GetTypeId() == "traffic.traffic_light") {
-      (boost::static_pointer_cast<carla::client::TrafficLight>(actor))
-          ->SetState(carla::rpc::TrafficLightState::Green);
-      (boost::static_pointer_cast<carla::client::TrafficLight>(actor))
-          ->SetGreenTime(100.0);
-    }
-  }
 }
 
 int main(int argc, char* argv[]) {
@@ -238,7 +178,7 @@ int main(int argc, char* argv[]) {
   auto vehicle2 = world.SpawnActor(vehicle_bp, transforms[p2_i]);
   vehicle1->SetSimulatePhysics(false);
   Router router(p1, p2, map);
-  
+
   // dbg use
   // router.DbgSetActor(vehicle1);
 

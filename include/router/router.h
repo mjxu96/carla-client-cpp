@@ -26,9 +26,9 @@
 #include <cmath>
 #include <iostream>
 #include <queue>
+#include <set>
 #include <thread>
 #include <unordered_set>
-#include <set>
 #include <utility>
 #include <vector>
 
@@ -57,7 +57,6 @@ class Router {
 
   // debug use
   boost::shared_ptr<carla::client::Actor> actor_{nullptr};
-  
 };
 
 }  // namespace minjun
