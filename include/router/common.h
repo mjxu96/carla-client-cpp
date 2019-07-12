@@ -15,6 +15,7 @@
 #include <functional>
 #include <string>
 #include <limits>
+#include <cmath>
 
 namespace minjun {
 
@@ -27,6 +28,16 @@ class Point3d {
   float z_{0.0};
   bool operator==(const Point3d& p) const {
     return x_ == p.x_ && y_ == p.y_ && z_ == p.z_;
+  }
+
+  bool operator==(const Point3d& p) {
+    return std::sqrt(std::pow((p.x_ - x_), 2.0) +
+                     std::pow((p.y_ - y_), 2.0) +
+                     std::pow((p.z_ - z_), 2.0)) < 0.01;
+  }
+
+  bool operator!=(const Point3d& p) {
+    return !((*this) == p);
   }
 
   std::string ToString() const {

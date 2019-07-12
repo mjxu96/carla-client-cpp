@@ -10,6 +10,21 @@ using namespace minjun;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
+bool CompareRouterResults(const std::vector<Point3d>& p1s, const std::vector<Point3d>& p2s) {
+  if (p1s.size() != p2s.size()) {
+    std::cout << "sizes are not the same" << std::endl;
+    std::cout << "size 1: " << p1s.size() << "  size 2: " << p2s.size() << std::endl;
+    return false;
+  }
+  for (size_t i = 0; i < p1s.size(); i++) {
+    if (!(p1s[i] == p2s[i])) {
+      std::cout << "No. " << i << " Point not same" << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
 std::string DBGPrint(const carla::geom::Location& location) {
   return std::string("[") + std::to_string(location.x) + std::string(", ") +
          std::to_string(location.y) + std::string(", ") +
@@ -59,7 +74,21 @@ Router::Router(Point3d start_point, Point3d end_point,
 void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
 std::vector<Point3d> Router::GetRoutePoints() { 
-  return AStar();
+  auto astar_start = std::chrono::system_clock::now();
+  auto res1 = AStar();
+  auto astar_end = std::chrono::system_clock::now();
+  auto res2 = BFS();
+  if (CompareRouterResults(res1, res2)) {
+    std::cout << "results same" << std::endl;
+  }
+  auto bfs_end = std::chrono::system_clock::now();
+  std::chrono::duration<double> astar_duration = astar_end - astar_start; 
+  std::chrono::duration<double> bfs_duration = bfs_end - astar_end; 
+  auto astart_time = astar_duration.count();
+  auto bfs_time = bfs_duration.count();
+  std::cout << "Astar time: " << astart_time << std::endl;
+  std::cout << "BFS time: " << bfs_time << std::endl;
+  return res1;
   //return BFS();
 }
 
@@ -135,11 +164,11 @@ std::vector<Point3d> Router::BFS() {
     point_queue.pop();
     if (Distance(current_waypoint->GetTransform().location, end_location) <
         distance_threshold_) {
-      auto current_lane_id = current_waypoint->GetLaneId();
-      auto current_road_id = current_waypoint->GetRoadId();
-      if (current_lane_id == end_lane_id && current_road_id == end_road_id) {
-        return ConvertFromWaypointToPoint3d(current_waypoints);
-      }
+      //auto current_lane_id = current_waypoint->GetLaneId();
+      //auto current_road_id = current_waypoint->GetRoadId();
+      //if (current_lane_id == end_lane_id && current_road_id == end_road_id) {
+      return ConvertFromWaypointToPoint3d(current_waypoints);
+      //}
     }
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
     for (const auto& next_waypoint : next_waypoints) {
