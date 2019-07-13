@@ -20,6 +20,7 @@ Router::Router(Point3d start_point, Point3d end_point,
 void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
 std::vector<Point3d> Router::GetRoutePoints() {
+  /*
   auto astar_start = std::chrono::system_clock::now();
   auto res1 = AStar();
   auto astar_end = std::chrono::system_clock::now();
@@ -34,12 +35,62 @@ std::vector<Point3d> Router::GetRoutePoints() {
   auto bfs_time = bfs_duration.count();
   std::cout << "Astar time: " << astart_time << std::endl;
   std::cout << "BFS time: " << bfs_time << std::endl;
-  return res1;
+  */
+  return Dijkstra();//res1;
   // return BFS();
 }
 
 std::vector<Point3d> Router::Dijkstra() {
+  std::set<Node, NodeComparator> open_set;
+  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>,
+                       boost::shared_ptr<carla::client::Waypoint>>
+      waypoint_predecessor;
+  auto start_waypoint = map_ptr_->GetWaypoint(
+      carla::geom::Location(start_point_.x_, start_point_.y_, start_point_.z_));
+  auto end_waypoint = map_ptr_->GetWaypoint(
+      carla::geom::Location(end_point_.x_, end_point_.y_, end_point_.z_));
+  Node start_node(start_waypoint, 0.0);
+  open_set.insert(start_node);
 
+  while (!open_set.empty()) {
+    auto current_node_it = open_set.begin();
+    auto current_waypoint = current_node_it->GetWaypoint();
+    double current_distance = current_node_it->GetDistance();
+    open_set.erase(current_node_it);
+
+    if (Distance(end_waypoint, current_waypoint) < distance_threshold_) {
+      std::cout << "found" << std::endl;
+      std::vector<boost::shared_ptr<carla::client::Waypoint>> result_waypoints;
+      while (waypoint_predecessor.find(current_waypoint) !=
+             waypoint_predecessor.end()) {
+        result_waypoints.push_back(current_waypoint);
+        current_waypoint =
+            (waypoint_predecessor.find(current_waypoint)->second);
+      }
+      auto result = ConvertFromWaypointToPoint3d(result_waypoints);
+      std::reverse(result.begin(), result.end());
+      return result;
+    }
+
+    auto next_waypoints = current_waypoint->GetNext(point_interval_);
+    for (const auto& next_waypoint : next_waypoints) {
+      double tmp_distance = current_distance + Distance(current_waypoint, next_waypoint);
+      Node next_node(next_waypoint, tmp_distance);
+      auto next_node_it = open_set.find(next_node);
+      if (next_node_it == open_set.end()) {
+        open_set.insert(next_node);
+        waypoint_predecessor[next_waypoint] =  current_waypoint;
+      } else {
+        if (next_node_it->GetDistance() > tmp_distance) {
+          open_set.erase(next_node_it);
+          waypoint_predecessor[next_waypoint] =  current_waypoint;
+          open_set.insert(next_node);
+        }
+      }
+    }
+  }
+  std::vector<Point3d> result;
+  return result;
 }
 
 std::vector<Point3d> Router::AStar() {
