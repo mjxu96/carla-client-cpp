@@ -49,7 +49,35 @@ std::vector<Point3d> Router::GetRoutePoints() {
 
 std::vector<Point3d> Router::RRT() {
   RRTUtils rrt_utils(map_ptr_, start_point_, end_point_);
+  std::unordered_map<std::shared_ptr<Point3d>, std::shared_ptr<Point3d>> predecessor_points;
+  std::vector<std::shared_ptr<Point3d>> discorvered_points;
   std::vector<Point3d> result;
+  discorvered_points.push_back(std::make_shared<Point3d>(start_point_));
+
+  size_t count = 0;
+  size_t times_limit = 100000;
+  while (count < times_limit) {
+    auto point = rrt_utils.RandomSample(); // default probability is 0.3
+    size_t nearest_index = rrt_utils.FindNearestIndex(discorvered_points, *point);
+    auto new_point = rrt_utils.Extend(*(discorvered_points[nearest_index]), *point);
+    if (new_point != nullptr) {
+      discorvered_points.push_back(new_point);
+      predecessor_points[new_point] = discorvered_points[nearest_index];
+      if (Distance(end_point_, *new_point) < distance_threshold_) {
+        std::cout << "found" << std::endl;
+        while (predecessor_points.find(new_point) != predecessor_points.end()) {
+          result.push_back(*new_point);
+          new_point = predecessor_points.find(new_point)->second;
+        }
+        std::reverse(result.begin(), result.end());
+        return result;
+      }
+    }
+
+    count++;
+  }
+
+  std::cout << "not found" << std::endl;
   return result;
 }
 
