@@ -9,21 +9,21 @@
 
 #include "carla/client/Actor.h"
 #include "carla/client/ActorList.h"
+#include "carla/client/Map.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Waypoint.h"
 #include "carla/client/World.h"
-#include "carla/client/Map.h"
 
 #include <boost/geometry.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
+#include <boost/shared_ptr.hpp>
 
-#include <cstdlib>
-#include <random>
-#include <ctime>
 #include <cmath>
+#include <cstdlib>
+#include <ctime>
 #include <functional>
 #include <limits>
+#include <random>
 #include <string>
 
 namespace minjun {
@@ -150,58 +150,62 @@ void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr) {
   }
 }
 
-
-
 class RRTUtils {
-public:
-  RRTUtils(boost::shared_ptr<carla::client::Map> map_ptr, 
-           const Point3d& start_point, const Point3d& end_point, 
-           double road_offset_threshold = 3.0) :
-    map_ptr_(std::move(map_ptr)), start_point_(std::move(start_point)),
-    end_point_(std::move(end_point)), road_offset_threshold_(road_offset_threshold) {
-      auto random_waypoints = map_ptr_->GenerateWaypoints(road_offset_threshold_);
-      for (const auto& waypoint : random_waypoints) {
-        auto loc = waypoint->GetTransform().location;
-        random_points_.emplace_back(loc.x, loc.y, loc.z);
-      }
-      std::srand(std::time(nullptr));
+ public:
+  RRTUtils(boost::shared_ptr<carla::client::Map> map_ptr,
+           const Point3d& start_point, const Point3d& end_point,
+           double road_offset_threshold = 3.0)
+      : map_ptr_(std::move(map_ptr)),
+        start_point_(std::move(start_point)),
+        end_point_(std::move(end_point)),
+        road_offset_threshold_(road_offset_threshold) {
+    auto random_waypoints = map_ptr_->GenerateWaypoints(road_offset_threshold_);
+    for (const auto& waypoint : random_waypoints) {
+      auto loc = waypoint->GetTransform().location;
+      random_points_.emplace_back(loc.x, loc.y, loc.z);
     }
+    std::srand(std::time(nullptr));
+  }
 
   bool IsInRoad(const Point3d& p) {
     carla::geom::Location p_loc(p.x_, p.y_, p.z_);
     auto waypoint = map_ptr_->GetWaypoint(p_loc);
-    if (Distance(waypoint->GetTransform().location, p_loc) >= road_offset_threshold_) {
-      // std::cout << "distance: " <<  Distance(waypoint->GetTransform().location, p_loc) << std::endl;
+    if (Distance(waypoint->GetTransform().location, p_loc) >=
+        road_offset_threshold_) {
+      // std::cout << "distance: " <<
+      // Distance(waypoint->GetTransform().location, p_loc) << std::endl;
       return false;
     }
     return true;
   }
-  
-  std::shared_ptr<Point3d> RandomSample(double toward_pro=0.3) {
-    double random_value = std::rand() / ((double) RAND_MAX);
+
+  std::shared_ptr<Point3d> RandomSample(double toward_pro = 0.3) {
+    double random_value = std::rand() / ((double)RAND_MAX);
     // std::cout << random_value << std::endl;
 
     if (random_value < toward_pro) {
       return std::make_shared<Point3d>(end_point_);
     } else {
-      return std::make_shared<Point3d>(random_points_[std::rand() % random_points_.size()]);
+      return std::make_shared<Point3d>(
+          random_points_[std::rand() % random_points_.size()]);
     }
   }
 
-  std::shared_ptr<Point3d> Extend(const Point3d& cur, const Point3d& tar, double delta_q = 3.0) {
+  std::shared_ptr<Point3d> Extend(const Point3d& cur, const Point3d& tar,
+                                  double delta_q = 3.0) {
     double angle = std::atan2(tar.y_ - cur.y_, tar.x_ - cur.x_);
     double delta_x = delta_q * std::cos(angle);
     double delta_y = delta_q * std::sin(angle);
-    std::shared_ptr<Point3d> res = std::make_shared<Point3d>(delta_x + cur.x_, delta_y + cur.y_, cur.z_);
+    std::shared_ptr<Point3d> res =
+        std::make_shared<Point3d>(delta_x + cur.x_, delta_y + cur.y_, cur.z_);
     if (!IsInRoad(*res)) {
       return nullptr;
     }
     return res;
   }
 
-
-
-  static size_t FindNearestIndex(const std::vector<std::shared_ptr<Point3d>>& points, const Point3d& p) {
+  static size_t FindNearestIndex(
+      const std::vector<std::shared_ptr<Point3d>>& points, const Point3d& p) {
     if (points.size() == 0) {
       std::cerr << "ERROR! points size cannot be 0!!!" << std::endl;
       return 0;
@@ -209,7 +213,7 @@ public:
 
     double min_distance = std::numeric_limits<double>::max();
     size_t index = 0;
-  
+
     for (size_t i = 0; i < points.size(); i++) {
       if (Distance(p, *(points[i])) < min_distance) {
         index = i;
@@ -220,29 +224,7 @@ public:
     return index;
   }
 
-  // Point3d RandomSample(const Point3d& p, double toward_pro=0.3) {
-  //   double random_value = std::rand() / ((double) RAND_MAX);
-  //   std::cout << random_value << std::endl;
-
-  //   double angle = 0; // std::atan2(end_point_.y_ - p.y_, end_point_.x_ - p.x_);
-  //   double delta_x = 0; // delta_q_ * std::cos(angle);
-  //   double delta_y = 0; // delta_q_ * std::sin(angle);
-
-  //   if (random_value < toward_pro) {
-  //     // Go toward end point
-  //     angle = std::atan2(end_point_.y_ - p.y_, end_point_.x_ - p.x_);
-  //     delta_x = delta_q_ * std::cos(angle);
-  //     delta_y = delta_q_ * std::sin(angle);
-  //   } else {
-  //     // Just random
-  //     angle = 2 * M_PI * std::rand() / ((double) RAND_MAX);
-  //     delta_x = delta_q_ * std::cos(angle);
-  //     delta_y = delta_q_ * std::sin(angle);
-  //   }
-  //   return Point3d(p.x_ + delta_x, p.y_ + delta_y, p.z_);
-  // }
-
-private:
+ private:
   boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
   Point3d start_point_;
   Point3d end_point_;

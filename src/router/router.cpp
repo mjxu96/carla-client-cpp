@@ -26,9 +26,9 @@ std::vector<Point3d> Router::GetRoutePoints() {
   auto bfs_res = BFS();
   auto bfs_end = std::chrono::system_clock::now();
   auto dijkstra_res = Dijkstra();
-  auto dijkstra_end = std::chrono::system_clock::now(); 
+  auto dijkstra_end = std::chrono::system_clock::now();
   auto rrt_res = RRT();
-  auto rrt_end = std::chrono::system_clock::now(); 
+  auto rrt_end = std::chrono::system_clock::now();
   if (CompareRouterResults(astar_res, bfs_res)) {
     std::cout << "astar and bfs results same" << std::endl;
   }
@@ -38,7 +38,7 @@ std::vector<Point3d> Router::GetRoutePoints() {
   std::chrono::duration<double> astar_duration = astar_end - astar_start;
   std::chrono::duration<double> bfs_duration = bfs_end - astar_end;
   std::chrono::duration<double> dijkstra_duration = dijkstra_end - bfs_end;
-  std::chrono::duration<double> rrt_duration = rrt_end -  dijkstra_end;
+  std::chrono::duration<double> rrt_duration = rrt_end - dijkstra_end;
   auto astart_time = astar_duration.count();
   auto bfs_time = bfs_duration.count();
   auto dijkstra_time = dijkstra_duration.count();
@@ -52,7 +52,8 @@ std::vector<Point3d> Router::GetRoutePoints() {
 
 std::vector<Point3d> Router::RRT() {
   RRTUtils rrt_utils(map_ptr_, start_point_, end_point_);
-  std::unordered_map<std::shared_ptr<Point3d>, std::shared_ptr<Point3d>> predecessor_points;
+  std::unordered_map<std::shared_ptr<Point3d>, std::shared_ptr<Point3d>>
+      predecessor_points;
   std::vector<std::shared_ptr<Point3d>> discorvered_points;
   std::vector<Point3d> result;
   discorvered_points.push_back(std::make_shared<Point3d>(start_point_));
@@ -60,9 +61,11 @@ std::vector<Point3d> Router::RRT() {
   size_t count = 0;
   size_t times_limit = 100000;
   while (count < times_limit) {
-    auto point = rrt_utils.RandomSample(); // default probability is 0.3
-    size_t nearest_index = rrt_utils.FindNearestIndex(discorvered_points, *point);
-    auto new_point = rrt_utils.Extend(*(discorvered_points[nearest_index]), *point);
+    auto point = rrt_utils.RandomSample();  // default probability is 0.3
+    size_t nearest_index =
+        rrt_utils.FindNearestIndex(discorvered_points, *point);
+    auto new_point =
+        rrt_utils.Extend(*(discorvered_points[nearest_index]), *point);
     if (new_point != nullptr) {
       discorvered_points.push_back(new_point);
       predecessor_points[new_point] = discorvered_points[nearest_index];
@@ -118,16 +121,17 @@ std::vector<Point3d> Router::Dijkstra() {
 
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
     for (const auto& next_waypoint : next_waypoints) {
-      double tmp_distance = current_distance + Distance(current_waypoint, next_waypoint);
+      double tmp_distance =
+          current_distance + Distance(current_waypoint, next_waypoint);
       Node next_node(next_waypoint, tmp_distance);
       auto next_node_it = open_set.find(next_node);
       if (next_node_it == open_set.end()) {
         open_set.insert(next_node);
-        waypoint_predecessor[next_waypoint] =  current_waypoint;
+        waypoint_predecessor[next_waypoint] = current_waypoint;
       } else {
         if (next_node_it->GetDistance() > tmp_distance) {
           open_set.erase(next_node_it);
-          waypoint_predecessor[next_waypoint] =  current_waypoint;
+          waypoint_predecessor[next_waypoint] = current_waypoint;
           open_set.insert(next_node);
         }
       }
