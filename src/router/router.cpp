@@ -20,24 +20,29 @@ Router::Router(Point3d start_point, Point3d end_point,
 void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
 std::vector<Point3d> Router::GetRoutePoints() {
-  /*
   auto astar_start = std::chrono::system_clock::now();
-  auto res1 = AStar();
+  auto astar_res = AStar();
   auto astar_end = std::chrono::system_clock::now();
-  auto res2 = BFS();
+  auto bfs_res = BFS();
   auto bfs_end = std::chrono::system_clock::now();
-  if (CompareRouterResults(res1, res2)) {
-    std::cout << "results same" << std::endl;
+  auto dijkstra_res = Dijkstra();
+  auto dijkstra_end = std::chrono::system_clock::now(); 
+  if (CompareRouterResults(astar_res, bfs_res)) {
+    std::cout << "astar and bfs results same" << std::endl;
+  }
+  if (CompareRouterResults(dijkstra_res, bfs_res)) {
+    std::cout << "dijkstra and bfs results same" << std::endl;
   }
   std::chrono::duration<double> astar_duration = astar_end - astar_start;
   std::chrono::duration<double> bfs_duration = bfs_end - astar_end;
+  std::chrono::duration<double> dijkstra_duration = dijkstra_end - bfs_end;
   auto astart_time = astar_duration.count();
   auto bfs_time = bfs_duration.count();
+  auto dijkstra_time = dijkstra_duration.count();
   std::cout << "Astar time: " << astart_time << std::endl;
   std::cout << "BFS time: " << bfs_time << std::endl;
-  */
-  return Dijkstra();//res1;
-  // return BFS();
+  std::cout << "Dijkstra time: " << dijkstra_time << std::endl;
+  return dijkstra_res;
 }
 
 std::vector<Point3d> Router::Dijkstra() {
