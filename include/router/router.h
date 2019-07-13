@@ -46,6 +46,7 @@ class Router {
   void DbgSetActor(boost::shared_ptr<carla::client::Actor> actor);
 
  private:
+  std::vector<Point3d> RRT();
   std::vector<Point3d> Dijkstra();
   std::vector<Point3d> AStar();
   std::vector<Point3d> BFS();

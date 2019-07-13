@@ -20,6 +20,7 @@ Router::Router(Point3d start_point, Point3d end_point,
 void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
 std::vector<Point3d> Router::GetRoutePoints() {
+  /*
   auto astar_start = std::chrono::system_clock::now();
   auto astar_res = AStar();
   auto astar_end = std::chrono::system_clock::now();
@@ -39,10 +40,17 @@ std::vector<Point3d> Router::GetRoutePoints() {
   auto astart_time = astar_duration.count();
   auto bfs_time = bfs_duration.count();
   auto dijkstra_time = dijkstra_duration.count();
-  std::cout << "Astar time: " << astart_time << std::endl;
-  std::cout << "BFS time: " << bfs_time << std::endl;
+  std::cout << "Astar time:    " << astart_time << std::endl;
+  std::cout << "BFS time:      " << bfs_time << std::endl;
   std::cout << "Dijkstra time: " << dijkstra_time << std::endl;
-  return dijkstra_res;
+  */
+  return RRT();
+}
+
+std::vector<Point3d> Router::RRT() {
+  RRTUtils rrt_utils(map_ptr_, start_point_, end_point_);
+  std::vector<Point3d> result;
+  return result;
 }
 
 std::vector<Point3d> Router::Dijkstra() {

@@ -12,10 +12,14 @@
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Waypoint.h"
 #include "carla/client/World.h"
+#include "carla/client/Map.h"
 
 #include <boost/geometry.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <cstdlib>
+#include <random>
+#include <ctime>
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -144,6 +148,63 @@ void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr) {
     }
   }
 }
+
+
+
+class RRTUtils {
+public:
+  RRTUtils(boost::shared_ptr<carla::client::Map> map_ptr, 
+           const Point3d& start_point, const Point3d& end_point, 
+           double road_offset_threshold = 3.0, double delta_q = 3.0) :
+    map_ptr_(std::move(map_ptr)), start_point_(std::move(start_point)),
+    end_point_(std::move(end_point)), road_offset_threshold_(road_offset_threshold),
+    delta_q_(delta_q) {
+      std::srand(std::time(nullptr));
+    }
+
+  bool IsInRoad(const Point3d& p) {
+    carla::geom::Location p_loc(p.x_, p.y_, p.z_);
+    auto waypoint = map_ptr_->GetWaypoint(p_loc);
+    if (Distance(waypoint->GetTransform().location, p_loc) >= road_offset_threshold_) {
+      // std::cout << "distance: " <<  Distance(waypoint->GetTransform().location, p_loc) << std::endl;
+      return false;
+    }
+    return true;
+  }
+
+  Point3d RandomSample(const Point3d& p, double toward_pro=0.3) {
+    double random_value = std::rand() / ((double) RAND_MAX);
+    std::cout << random_value << std::endl;
+
+    double angle = 0; // std::atan2(end_point_.y_ - p.y_, end_point_.x_ - p.x_);
+    double delta_x = 0; // delta_q_ * std::cos(angle);
+    double delta_y = 0; // delta_q_ * std::sin(angle);
+
+    if (random_value < toward_pro) {
+      // Go toward end point
+      angle = std::atan2(end_point_.y_ - p.y_, end_point_.x_ - p.x_);
+      delta_x = delta_q_ * std::cos(angle);
+      delta_y = delta_q_ * std::sin(angle);
+    } else {
+      // Just random
+      angle = 2 * M_PI * std::rand() / ((double) RAND_MAX);
+      delta_x = delta_q_ * std::cos(angle);
+      delta_y = delta_q_ * std::sin(angle);
+    }
+    return Point3d(p.x_ + delta_x, p.y_ + delta_y, p.z_);
+  }
+
+  size_t FindNearestIndex(const std::vector<Point3d>& points, const Point3d& p) {
+
+  }
+
+private:
+  boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
+  Point3d start_point_;
+  Point3d end_point_;
+  double road_offset_threshold_{3.0};
+  double delta_q_{3.0};
+};
 
 }  // namespace utils
 
