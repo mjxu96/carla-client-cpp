@@ -20,7 +20,6 @@ Router::Router(Point3d start_point, Point3d end_point,
 void Router::SetPointInterval(double interval) { point_interval_ = interval; }
 
 std::vector<Point3d> Router::GetRoutePoints() {
-  /*
   auto astar_start = std::chrono::system_clock::now();
   auto astar_res = AStar();
   auto astar_end = std::chrono::system_clock::now();
@@ -28,6 +27,8 @@ std::vector<Point3d> Router::GetRoutePoints() {
   auto bfs_end = std::chrono::system_clock::now();
   auto dijkstra_res = Dijkstra();
   auto dijkstra_end = std::chrono::system_clock::now(); 
+  auto rrt_res = RRT();
+  auto rrt_end = std::chrono::system_clock::now(); 
   if (CompareRouterResults(astar_res, bfs_res)) {
     std::cout << "astar and bfs results same" << std::endl;
   }
@@ -37,14 +38,16 @@ std::vector<Point3d> Router::GetRoutePoints() {
   std::chrono::duration<double> astar_duration = astar_end - astar_start;
   std::chrono::duration<double> bfs_duration = bfs_end - astar_end;
   std::chrono::duration<double> dijkstra_duration = dijkstra_end - bfs_end;
+  std::chrono::duration<double> rrt_duration = rrt_end -  dijkstra_end;
   auto astart_time = astar_duration.count();
   auto bfs_time = bfs_duration.count();
   auto dijkstra_time = dijkstra_duration.count();
+  auto rrt_time = rrt_duration.count();
   std::cout << "Astar time:    " << astart_time << std::endl;
   std::cout << "BFS time:      " << bfs_time << std::endl;
   std::cout << "Dijkstra time: " << dijkstra_time << std::endl;
-  */
-  return RRT();
+  std::cout << "RRT time:      " << rrt_time << std::endl;
+  return dijkstra_res;
 }
 
 std::vector<Point3d> Router::RRT() {
@@ -64,7 +67,7 @@ std::vector<Point3d> Router::RRT() {
       discorvered_points.push_back(new_point);
       predecessor_points[new_point] = discorvered_points[nearest_index];
       if (Distance(end_point_, *new_point) < distance_threshold_) {
-        std::cout << "found" << std::endl;
+        std::cout << "RRT found" << std::endl;
         while (predecessor_points.find(new_point) != predecessor_points.end()) {
           result.push_back(*new_point);
           new_point = predecessor_points.find(new_point)->second;
@@ -77,7 +80,7 @@ std::vector<Point3d> Router::RRT() {
     count++;
   }
 
-  std::cout << "not found" << std::endl;
+  std::cout << "RRT not found" << std::endl;
   return result;
 }
 
@@ -100,7 +103,7 @@ std::vector<Point3d> Router::Dijkstra() {
     open_set.erase(current_node_it);
 
     if (Distance(end_waypoint, current_waypoint) < distance_threshold_) {
-      std::cout << "found" << std::endl;
+      std::cout << "Dijkstra found" << std::endl;
       std::vector<boost::shared_ptr<carla::client::Waypoint>> result_waypoints;
       while (waypoint_predecessor.find(current_waypoint) !=
              waypoint_predecessor.end()) {
@@ -130,6 +133,7 @@ std::vector<Point3d> Router::Dijkstra() {
       }
     }
   }
+  std::cout << "Dijkstra not found" << std::endl;
   std::vector<Point3d> result;
   return result;
 }
@@ -154,7 +158,7 @@ std::vector<Point3d> Router::AStar() {
     auto current_waypoint = current_node_it->GetWaypoint();
     open_set.erase(current_node_it);
     if (Distance(end_waypoint, current_waypoint) < distance_threshold_) {
-      std::cout << "found" << std::endl;
+      std::cout << "A* found" << std::endl;
       std::vector<boost::shared_ptr<carla::client::Waypoint>> result_waypoints;
       while (waypoint_predecessor.find(current_waypoint) !=
              waypoint_predecessor.end()) {
@@ -186,6 +190,7 @@ std::vector<Point3d> Router::AStar() {
     }
   }
 
+  std::cout << "A* not found" << std::endl;
   std::vector<Point3d> result;
   return result;
 }
@@ -215,6 +220,7 @@ std::vector<Point3d> Router::BFS() {
       // auto current_lane_id = current_waypoint->GetLaneId();
       // auto current_road_id = current_waypoint->GetRoadId();
       // if (current_lane_id == end_lane_id && current_road_id == end_road_id) {
+      std::cout << "BFS found" << std::endl;
       return ConvertFromWaypointToPoint3d(current_waypoints);
       //}
     }
@@ -230,6 +236,7 @@ std::vector<Point3d> Router::BFS() {
       point_queue.push({next_waypoint, current_waypoints_copy});
     }
   }
+  std::cout << "BFS not found" << std::endl;
   return result;
 }
 
