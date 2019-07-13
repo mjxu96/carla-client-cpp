@@ -38,6 +38,10 @@ std::vector<Point3d> Router::GetRoutePoints() {
   // return BFS();
 }
 
+std::vector<Point3d> Router::Dijkstra() {
+
+}
+
 std::vector<Point3d> Router::AStar() {
   std::set<Node, NodeComparator> open_set;
   boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>,
