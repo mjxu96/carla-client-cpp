@@ -183,6 +183,68 @@ rm -Rf ${GTEST_BASENAME}-libstdcxx-install
 unset GTEST_BASENAME
 
 # ==============================================================================
+# -- Get Recast&Detour and compile it with libc++ ------------------------------
+# ==============================================================================
+
+RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
+RECAST_BASENAME=recast-${CXX_TAG}
+
+RECAST_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
+RECAST_LIBPATH=${CARLA_BUILD_FOLDER}
+
+# if [[ -d "${RECAST_BASENAME}-install" ]] ; then
+#   log "${RECAST_BASENAME} already installed."
+# else
+rm -Rf \
+    ${RECAST_BASENAME}-source \
+    ${RECAST_BASENAME}-build \
+    ${RECAST_BASENAME}-install
+
+log "Retrieving Recast & Detour"
+
+git clone https://github.com/recastnavigation/recastnavigation.git ${RECAST_BASENAME}-source
+
+pushd ${RECAST_BASENAME}-source >/dev/null
+
+git reset --hard ${RECAST_COMMIT}
+
+popd >/dev/null
+
+log "Building Recast & Detour with libc++."
+
+mkdir -p ${RECAST_BASENAME}-build
+
+pushd ${RECAST_BASENAME}-build >/dev/null
+
+cmake -G "Unix Makefiles" \
+    -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+    -DCMAKE_INSTALL_PREFIX="../${RECAST_BASENAME}-install" \
+    -DRECASTNAVIGATION_DEMO=False \
+    -DRECASTNAVIGATION_TEST=False \
+    ../${RECAST_BASENAME}-source
+
+make -j${LIB_BUILD_CONCURRENCY}
+
+make install
+
+popd >/dev/null
+
+rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
+
+# move headers inside 'recast' folder
+mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
+mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
+cp -r ${RECAST_BASENAME}-install/include/recast ${RECAST_INCLUDE}/recast
+
+# TODO cp lib file
+
+# fi
+
+unset RECAST_BASENAME
+
+
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
@@ -226,6 +288,8 @@ set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
 set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
 set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
 set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
+set(RECAST_INCLUDE_PATH "${RECAST_INCLUDE}")
+set(RECAST_LIB_PATH "${RECAST_LIBPATH}")
 
 
 EOL
