@@ -13,12 +13,18 @@ It will also try to use GNU build tools (like g++ instead of clang++) to build t
 ```
 $ git clone https://github.com/wx9698/carla-client-cpp.git
 $ cd carla-client-cpp
-$ sudo ./setup/install-carla-tool.sh             # install necessary carla build tools
+
+# install necessary carla build tools
+$ sudo ./setup/install-carla-tool.sh
+
+# download boost, rpc, gtest and recast lib to this client folder
 $ ./setup/setup.sh                               
-# you can use command ./setup/setup.sh clang to indicate script to build with clang
+# you can use command "./setup/setup.sh clang" to indicate script to build with clang
+
+# build
 $ mkdir build && cd build
 $ cmake ../
-# you can also use command cmake -DUSE_CLANG=ON ../ to indicate cmake to set default compiler to clang
+# you can also use command "cmake -DUSE_CLANG=ON ../" to indicate cmake to set default compiler to clang
 $ make main                                      # it will generate the binary program at REPO_ROOT_FOLDER/bin
 $ ../bin/main
 ```
