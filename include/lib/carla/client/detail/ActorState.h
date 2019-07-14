@@ -10,6 +10,7 @@
 #include "carla/client/World.h"
 #include "carla/client/ActorAttribute.h"
 #include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/ActorFactory.h"
 #include "carla/rpc/Actor.h"
 
 namespace carla {
@@ -74,6 +75,8 @@ namespace detail {
   private:
 
     friend class Simulator;
+
+    friend class ActorFactory;
 
     explicit ActorState(rpc::Actor description, EpisodeProxy episode);
 
