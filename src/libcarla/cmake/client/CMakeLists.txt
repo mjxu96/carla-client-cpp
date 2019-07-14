@@ -132,8 +132,7 @@ set(libcarla_sources "${libcarla_sources};${libcarla_cephes_sources}")
 
 
 file(GLOB libcarla_pugixml_sources
-    "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
-    "${libcarla_source_thirdparty_path}/pugixml/*.hpp")
+    "${libcarla_source_thirdparty_path}/pugixml/*.cpp")
 set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
 # install(FILES ${libcarla_pugixml_sources} DESTINATION include/pugixml)
 
