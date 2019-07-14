@@ -1,9 +1,9 @@
-# Carla C++ Client for 095 release version
+# Carla C++ Client for 096 release version
 
 ## Notice 
 Only tested on Ubuntu 18.04 LTS
 
-Only compatible with [Carla 0.9.5 Release Version](https://github.com/carla-simulator/carla/releases/tag/0.9.5)
+Only compatible with [Carla 0.9.6 Release Version](https://github.com/carla-simulator/carla/releases/tag/0.9.6)
 
 This repo is used to generate carla c++ client with least source files. 
 

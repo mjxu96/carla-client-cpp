@@ -16,7 +16,7 @@ unset CARLA_FOLDER
 
 log "clean up previous build files"
 rm -rf ${CARLA_BUILD_FOLDER} ${CARLA_ROOT_FOLDER}/build 
-rm -rf ${CARLA_ROOT_FOLDER}/include/lib/boost ${CARLA_ROOT_FOLDER}/include/lib/rpc ${CARLA_ROOT_FOLDER}/include/lib/gtest
+rm -rf ${CARLA_ROOT_FOLDER}/include/lib/boost ${CARLA_ROOT_FOLDER}/include/lib/rpc ${CARLA_ROOT_FOLDER}/include/lib/gtest ${CARLA_ROOT_FOLDER}/include/lib/recast
 rm -f ${CMAKE_CONFIG_FILE}
 
 CXX_TAG=c7
