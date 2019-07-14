@@ -235,7 +235,7 @@ rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
 mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
 mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
 cp -r ${RECAST_BASENAME}-install/include/recast ${RECAST_INCLUDE}/recast
-cp -r ${RECAST_BASENAME}-install/lib ${RECAST_INCLUDE}/recast ${RECAST_LIBPATH}/ >/dev/null
+cp -r ${RECAST_BASENAME}-install/lib/* ${RECAST_INCLUDE}/recast ${RECAST_LIBPATH}/ >/dev/null
 
 rm -rf ${RECAST_BASENAME}-install
 
