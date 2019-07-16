@@ -2,9 +2,17 @@
 
 using namespace minjun;
 using namespace minjun::utils;
+using namespace minjun::planner;
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
+
+Planner::Planner(Point3d start_point, Point3d end_point) :
+  start_point_(std::move(start_point)), end_point_(std::move(end_point)) {}
+std::vector<PlannerPoint> Planner::GetPlannerPoints() {
+
+}
+
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
