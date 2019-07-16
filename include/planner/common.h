@@ -10,36 +10,36 @@
 #include "router/common.h"
 #include "utils/macrologger.h"
 
-
 namespace minjun {
 namespace planner {
 
 class PlannerPoint {
-public:
+ public:
   PlannerPoint(Point3d point, double speed, double yaw);
   Point3d GetPoint() const;
   double GetSpeed() const;
   double GetYaw() const;
-private:
+
+ private:
   Point3d point_;
   double speed_;
   double yaw_;
 };
 
 class Utils {
-public:
+ public:
   // In degree
   static double GetYaw(const Point3d& p1, const Point3d& p2);
   // static double GetDistance(const Point3d& p1, const Point3d& p2);
   // Solve function like a*x^2 + b*x + c = 0;
-  static boost::optional<std::pair<double, double>> SolveFunction(const double a, const double b, const double c);
+  static boost::optional<std::pair<double, double>> SolveFunction(
+      const double a, const double b, const double c);
   // Get yaw after rotate (-180.0 - 180.0)
-  static double AfterRotate(double init_yaw, double target_yaw, double t, const double yaw_rate_limit);
-
+  static double AfterRotate(double init_yaw, double target_yaw, double t,
+                            const double yaw_rate_limit);
 };
-  
-} // namespace planner
-} // namespace minjun
 
+}  // namespace planner
+}  // namespace minjun
 
 #endif

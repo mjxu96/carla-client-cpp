@@ -7,13 +7,16 @@ using namespace minjun::planner;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-Planner::Planner(Point3d start_point, Point3d end_point, boost::shared_ptr<carla::client::Map> map_ptr,
-  double init_yaw, double init_speed) :
-  start_point_(std::move(start_point)), end_point_(std::move(end_point)), map_ptr_(std::move(map_ptr)),
-  init_yaw_(init_yaw), init_speed_(init_speed) {
+Planner::Planner(Point3d start_point, Point3d end_point,
+                 boost::shared_ptr<carla::client::Map> map_ptr, double init_yaw,
+                 double init_speed)
+    : start_point_(std::move(start_point)),
+      end_point_(std::move(end_point)),
+      map_ptr_(std::move(map_ptr)),
+      init_yaw_(init_yaw),
+      init_speed_(init_speed) {
   Router router(start_point_, end_point_, map_ptr_);
   router_points_ = router.GetRoutePoints(1.0);
-
 }
 
 std::vector<PlannerPoint> Planner::GetPlannerPoints() {
@@ -31,8 +34,8 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints() {
   for (size_t i = 0; i < point_num - 1; i++) {
     planner_points.emplace_back(router_points_[i], pre_speed, pre_yaw);
 
-    double s = Distance(router_points_[i], router_points_[i+1]);
-    double target_yaw = Utils::GetYaw(router_points_[i], router_points_[i+1]);
+    double s = Distance(router_points_[i], router_points_[i + 1]);
+    double target_yaw = Utils::GetYaw(router_points_[i], router_points_[i + 1]);
     auto t_option = Utils::SolveFunction(0.5 * acce_limit, pre_speed, -s);
     if (t_option == boost::none) {
       LOG_ERROR("Something error when solve time function");
@@ -53,13 +56,12 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints() {
       t = tmp_t + s_left / speed_limit;
     }
     pre_yaw = Utils::AfterRotate(pre_yaw, target_yaw, t, yaw_rate_limit);
-
   }
 
-  planner_points.emplace_back(router_points_[point_num-1], pre_speed, pre_yaw);
+  planner_points.emplace_back(router_points_[point_num - 1], pre_speed,
+                              pre_yaw);
   return planner_points;
 }
-
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -108,7 +110,10 @@ int main(int argc, char* argv[]) {
   for (const auto& point : points) {
     auto router_point = point.GetPoint();
     carla::geom::Rotation rotation(0.0, point.GetYaw(), 0.0);
-    carla::geom::Transform transfrom(carla::geom::Location(router_point.x_, router_point.y_, router_point.z_), rotation);
+    carla::geom::Transform transfrom(
+        carla::geom::Location(router_point.x_, router_point.y_,
+                              router_point.z_),
+        rotation);
     vehicle1->SetTransform(transfrom);
     std::this_thread::sleep_for(50ms);
   }
