@@ -8,6 +8,8 @@
 #define MINJUN_PLANNER_COMMON_H_
 
 #include "router/common.h"
+#include "utils/macrologger.h"
+
 
 namespace minjun {
 namespace planner {
@@ -25,6 +27,14 @@ private:
 };
 
 class Utils {
+public:
+  // In degree
+  static double GetYaw(const Point3d& p1, const Point3d& p2);
+  // static double GetDistance(const Point3d& p1, const Point3d& p2);
+  // Solve function like a*x^2 + b*x + c = 0;
+  static boost::optional<std::pair<double, double>> SolveFunction(const double a, const double b, const double c);
+  // Get yaw after rotate (-180.0 - 180.0)
+  static double AfterRotate(double init_yaw, double target_yaw, double t, const double yaw_rate_limit);
 
 };
   

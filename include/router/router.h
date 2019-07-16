@@ -39,13 +39,13 @@ class Router {
   Router(Point3d start_point, Point3d end_point,
          boost::shared_ptr<carla::client::Map> map_ptr);
 
-  std::vector<Point3d> GetRoutePoints();
-  void SetPointInterval(double interval);
+  std::vector<Point3d> GetRoutePoints(double interval=2.0);
 
   // debug use
   void DbgSetActor(boost::shared_ptr<carla::client::Actor> actor);
 
  private:
+  void SetPointInterval(double interval);
   std::vector<Point3d> RRT();
   std::vector<Point3d> Dijkstra();
   std::vector<Point3d> AStar();

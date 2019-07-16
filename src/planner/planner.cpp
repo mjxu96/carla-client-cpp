@@ -7,10 +7,57 @@ using namespace minjun::planner;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-Planner::Planner(Point3d start_point, Point3d end_point) :
-  start_point_(std::move(start_point)), end_point_(std::move(end_point)) {}
-std::vector<PlannerPoint> Planner::GetPlannerPoints() {
+Planner::Planner(Point3d start_point, Point3d end_point, boost::shared_ptr<carla::client::Map> map_ptr,
+  double init_yaw, double init_speed) :
+  start_point_(std::move(start_point)), end_point_(std::move(end_point)), map_ptr_(std::move(map_ptr)),
+  init_yaw_(init_yaw), init_speed_(init_speed) {
+  Router router(start_point_, end_point_, map_ptr_);
+  router_points_ = router.GetRoutePoints(1.0);
 
+}
+
+std::vector<PlannerPoint> Planner::GetPlannerPoints() {
+  std::vector<PlannerPoint> planner_points;
+  double pre_yaw = init_yaw_;
+  double pre_speed = init_speed_;
+  const double acce_limit = constants::Constants::acceleration;
+  const double speed_limit = constants::Constants::speed;
+  const double yaw_rate_limit = constants::Constants::yaw_rate;
+  size_t point_num = router_points_.size();
+  if (point_num == 0) {
+    return planner_points;
+  }
+
+  for (size_t i = 0; i < point_num - 1; i++) {
+    planner_points.emplace_back(router_points_[i], pre_speed, pre_yaw);
+
+    double s = Distance(router_points_[i], router_points_[i+1]);
+    double target_yaw = Utils::GetYaw(router_points_[i], router_points_[i+1]);
+    auto t_option = Utils::SolveFunction(0.5 * acce_limit, pre_speed, -s);
+    if (t_option == boost::none) {
+      LOG_ERROR("Something error when solve time function");
+      continue;
+    }
+    auto t = std::max(t_option.value().first, t_option.value().second);
+    if (t < 0) {
+      LOG_ERROR("Something error when solve time function");
+      continue;
+    }
+
+    double tmp_pre_speed = pre_speed;
+    pre_speed += t * acce_limit;
+    if (pre_speed > speed_limit) {
+      pre_speed = speed_limit;
+      double tmp_t = (speed_limit - tmp_pre_speed) / acce_limit;
+      double s_left = s - tmp_t * (tmp_pre_speed + speed_limit) / 2.0;
+      t = tmp_t + s_left / speed_limit;
+    }
+    pre_yaw = Utils::AfterRotate(pre_yaw, target_yaw, t, yaw_rate_limit);
+
+  }
+
+  planner_points.emplace_back(router_points_[point_num-1], pre_speed, pre_yaw);
+  return planner_points;
 }
 
 
@@ -50,15 +97,19 @@ int main(int argc, char* argv[]) {
   auto vehicle1 = world.SpawnActor(vehicle_bp, transforms[p1_i]);
   auto vehicle2 = world.SpawnActor(vehicle_bp, transforms[p2_i]);
   vehicle1->SetSimulatePhysics(false);
-  Router router(p1, p2, map);
+  auto init_yaw = vehicle1->GetTransform().rotation.yaw;
+  Planner planner(p1, p2, map, init_yaw, 0.0);
 
   // dbg use
   // router.DbgSetActor(vehicle1);
 
-  auto points = router.GetRoutePoints();
+  auto points = planner.GetPlannerPoints();
 
   for (const auto& point : points) {
-    vehicle1->SetLocation(carla::geom::Location(point.x_, point.y_, point.z_));
+    auto router_point = point.GetPoint();
+    carla::geom::Rotation rotation(0.0, point.GetYaw(), 0.0);
+    carla::geom::Transform transfrom(carla::geom::Location(router_point.x_, router_point.y_, router_point.z_), rotation);
+    vehicle1->SetTransform(transfrom);
     std::this_thread::sleep_for(50ms);
   }
   std::cin.ignore();
