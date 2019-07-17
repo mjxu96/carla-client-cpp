@@ -18,6 +18,22 @@ Planner::Planner(Point3d start_point, Point3d end_point,
       map_utils_(map_ptr_) {
   Router router(start_point_, end_point_, map_ptr_);
   router_points_ = router.GetRoutePoints(1.0);
+
+  // find points pair that are in the junction
+  for (size_t i = 0; i < router_points_.size(); i++) {
+    auto point = router_points_[i];
+    if (!map_utils_.IsInJunction(point)) {
+      continue;
+    }
+    size_t first = i;
+    size_t second = i + 1;
+    while (second < router_points_.size() && map_utils_.IsInJunction(router_points_[second])) {
+      second++;
+    }
+    junction_points_pair_.push_back({first, second-1});
+    i = second;
+  }
+
 }
 
 std::vector<PlannerPoint> Planner::GetPlannerPoints() {

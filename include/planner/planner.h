@@ -30,6 +30,7 @@ class Planner {
   std::vector<utils::Point3d> router_points_;
   boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
   utils::MapUtils map_utils_;
+  std::vector<std::pair<size_t, size_t>> junction_points_pair_;
 };
 
 }  // namespace minjun

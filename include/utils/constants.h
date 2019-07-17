@@ -13,6 +13,7 @@ namespace constants {
 class Constants {
  public:
   static constexpr double acceleration = 2.5;       // m/s^2
+  static constexpr double deceleration = 5.0;       // m/s^2
   static constexpr double speed = 15.0;             // m/s
   static constexpr double junction_speed = 3.0;     // m/s
   static constexpr double yaw_rate = 50.0;          // degree
