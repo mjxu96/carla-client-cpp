@@ -29,6 +29,7 @@ class Planner {
   double init_speed_{0.0};
   std::vector<utils::Point3d> router_points_;
   boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
+  utils::MapUtils map_utils_;
 };
 
 }  // namespace minjun

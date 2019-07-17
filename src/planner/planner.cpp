@@ -14,7 +14,8 @@ Planner::Planner(Point3d start_point, Point3d end_point,
       end_point_(std::move(end_point)),
       map_ptr_(std::move(map_ptr)),
       init_yaw_(init_yaw),
-      init_speed_(init_speed) {
+      init_speed_(init_speed),
+      map_utils_(map_ptr_) {
   Router router(start_point_, end_point_, map_ptr_);
   router_points_ = router.GetRoutePoints(1.0);
 }
@@ -65,7 +66,14 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints() {
 
 std::vector<PlannerPoint> Planner::GetPlannerPoints(const Point3d& current_pos) {
   std::vector<PlannerPoint> planner_points;
-
+  map_utils_.FindBehindIndex(router_points_, router_points_[0]);
+  for (size_t i = 0; i < router_points_.size(); i++) {
+    auto tmp_pos = router_points_[i];
+    if (i != map_utils_.FindBehindIndex(router_points_, tmp_pos)) {
+      std::cout << "something wrong with find index, true i: " << i << " result: " <<  map_utils_.FindBehindIndex(router_points_, tmp_pos) << std::endl;
+    }
+  }
+  return planner_points;
 }
 
 int main(int argc, char* argv[]) {
@@ -111,17 +119,19 @@ int main(int argc, char* argv[]) {
   // router.DbgSetActor(vehicle1);
 
   auto points = planner.GetPlannerPoints();
+  planner.GetPlannerPoints(p1);
 
-  for (const auto& point : points) {
-    auto router_point = point.GetPoint();
-    carla::geom::Rotation rotation(0.0, point.GetYaw(), 0.0);
-    carla::geom::Transform transfrom(
-        carla::geom::Location(router_point.x_, router_point.y_,
-                              router_point.z_),
-        rotation);
-    vehicle1->SetTransform(transfrom);
-    std::this_thread::sleep_for(50ms);
-  }
+
+  // for (const auto& point : points) {
+  //   auto router_point = point.GetPoint();
+  //   carla::geom::Rotation rotation(0.0, point.GetYaw(), 0.0);
+  //   carla::geom::Transform transfrom(
+  //       carla::geom::Location(router_point.x_, router_point.y_,
+  //                             router_point.z_),
+  //       rotation);
+  //   vehicle1->SetTransform(transfrom);
+  //   std::this_thread::sleep_for(50ms);
+  // }
   std::cin.ignore();
   std::cin.get();
   vehicle1->Destroy();
