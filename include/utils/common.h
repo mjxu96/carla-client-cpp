@@ -21,7 +21,6 @@
 namespace minjun {
 
 namespace utils {
-
 class Point3d {
  public:
   Point3d() = default;
@@ -60,7 +59,21 @@ private:
   boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
 
 };
-  
+ 
+class Odom {
+public:
+  Odom() = default;
+  Odom(Point3d pos, double speed, double yaw);
+  Point3d GetPosition() const {return pos_;}
+  double GetSpeed() const {return speed_;}
+  double GetYaw() const {return yaw_;}
+private:
+  Point3d pos_;
+  double speed_{0};
+  double yaw_{0};
+};
+
+ 
 } // namespace utils 
   
 } // namespace minjun

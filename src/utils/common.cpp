@@ -89,3 +89,6 @@ bool MapUtils::IsWithinSegment(const Point3d& p1, const Point3d& p2, const Point
   Line2d in_line2(p2, p1);
   return (out_line1.DotMul(in_line1) >= 0) && (out_line2.DotMul(in_line2) > 0);
 }
+
+Odom::Odom(Point3d pos, double speed, double yaw) :
+  pos_(std::move(pos)), speed_(speed), yaw_(yaw) {}
