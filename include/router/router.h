@@ -36,23 +36,23 @@ namespace minjun {
 
 class Router {
  public:
-  Router(Point3d start_point, Point3d end_point,
+  Router(utils::Point3d start_point, utils::Point3d end_point,
          boost::shared_ptr<carla::client::Map> map_ptr);
 
-  std::vector<Point3d> GetRoutePoints(double interval=2.0);
+  std::vector<utils::Point3d> GetRoutePoints(double interval=2.0);
 
   // debug use
   void DbgSetActor(boost::shared_ptr<carla::client::Actor> actor);
 
  private:
   void SetPointInterval(double interval);
-  std::vector<Point3d> RRT();
-  std::vector<Point3d> Dijkstra();
-  std::vector<Point3d> AStar();
-  std::vector<Point3d> BFS();
+  std::vector<utils::Point3d> RRT();
+  std::vector<utils::Point3d> Dijkstra();
+  std::vector<utils::Point3d> AStar();
+  std::vector<utils::Point3d> BFS();
   boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
-  Point3d start_point_;
-  Point3d end_point_;
+  utils::Point3d start_point_;
+  utils::Point3d end_point_;
 
   double point_interval_{2};
   double distance_threshold_{20.0};

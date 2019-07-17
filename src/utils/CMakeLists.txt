@@ -7,8 +7,7 @@ include_directories(${CLIENT_ROOT_FOLDER}/include/lib)
 include_directories(${CLIENT_ROOT_FOLDER}/include)
 link_directories(${CLIENT_ROOT_FOLDER}/lib)
 
-add_library(router-lib common.cpp)
-add_library(router router.cpp)
+add_library(common common.cpp)
 
-target_link_libraries(router router-lib common carla_client rpc boost_filesystem png tiff jpeg)
-target_include_directories(router PUBLIC .)
+target_link_libraries(common carla_client rpc boost_filesystem png tiff jpeg)
+target_include_directories(common PUBLIC .)

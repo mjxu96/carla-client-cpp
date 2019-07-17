@@ -16,17 +16,18 @@ namespace minjun {
 
 class Planner {
  public:
-  Planner(Point3d start_point, Point3d end_point,
+  Planner(utils::Point3d start_point, utils::Point3d end_point,
           boost::shared_ptr<carla::client::Map> map_ptr, double init_yaw = 0.0,
           double init_speed = 0.0);
   std::vector<planner::PlannerPoint> GetPlannerPoints();
+  std::vector<planner::PlannerPoint> GetPlannerPoints(const utils::Point3d& current_pos);
 
  private:
-  Point3d start_point_;
-  Point3d end_point_;
+  utils::Point3d start_point_;
+  utils::Point3d end_point_;
   double init_yaw_{0.0};  // degree
   double init_speed_{0.0};
-  std::vector<Point3d> router_points_;
+  std::vector<utils::Point3d> router_points_;
   boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
 };
 

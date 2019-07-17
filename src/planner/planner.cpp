@@ -63,6 +63,11 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints() {
   return planner_points;
 }
 
+std::vector<PlannerPoint> Planner::GetPlannerPoints(const Point3d& current_pos) {
+  std::vector<PlannerPoint> planner_points;
+
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     std::cout << "error, not enough params" << std::endl;

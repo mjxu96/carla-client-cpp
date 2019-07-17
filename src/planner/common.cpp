@@ -7,6 +7,7 @@
 #include "planner/common.h"
 
 using namespace minjun;
+using namespace minjun::utils;
 using namespace minjun::planner;
 
 PlannerPoint::PlannerPoint(Point3d point, double speed, double yaw)

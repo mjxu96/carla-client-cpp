@@ -7,6 +7,8 @@
 #ifndef MINJUN_ROUTER_COMMON_H_
 #define MINJUN_ROUTER_COMMON_H_
 
+#include "utils/common.h"
+
 #include "carla/client/Actor.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/Map.h"
@@ -27,20 +29,6 @@
 #include <string>
 
 namespace minjun {
-
-class Point3d {
- public:
-  Point3d() = default;
-  Point3d(float x, float y, float z) : x_(x), y_(y), z_(z) {}
-  float x_{0.0};
-  float y_{0.0};
-  float z_{0.0};
-
-  bool operator==(const Point3d& p) const;
-
-
-  std::string ToString() const;
-};
 
 class Node {
  public:
@@ -176,13 +164,4 @@ class RRTUtils {
 
 }  // namespace minjun
 
-namespace std {
-template <>
-struct hash<minjun::Point3d> {
-  size_t operator()(const minjun::Point3d& p) const {
-    return (hash<double>()(p.x_)) ^ (hash<double>()(p.y_)) ^
-           (hash<double>()(p.z_));
-  }
-};
-}  // namespace std
 #endif

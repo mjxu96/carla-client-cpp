@@ -10,4 +10,4 @@ link_directories(${CLIENT_ROOT_FOLDER}/lib)
 add_library(planner-lib common.cpp)
 add_executable(planner planner.cpp)
 
-target_link_libraries(planner planner-lib router)
+target_link_libraries(planner planner-lib router common)

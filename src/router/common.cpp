@@ -1,18 +1,6 @@
 
 #include "router/common.h"
 namespace minjun {
-  
-
-
-bool Point3d::operator==(const Point3d& p) const {
-  return std::sqrt(std::pow((p.x_ - x_), 2.0) + std::pow((p.y_ - y_), 2.0) +
-                   std::pow((p.z_ - z_), 2.0)) < 0.001;
-}
-std::string Point3d::ToString() const {
-  return std::string("[") + std::to_string(x_) + std::string(", ") +
-         std::to_string(y_) + std::string(", ") + std::to_string(z_) +
-         std::string("]");
-}
 
 Node::Node(boost::shared_ptr<carla::client::Waypoint> waypoint, double distance)
       : waypoint_(std::move(waypoint)), distance_(distance) {}

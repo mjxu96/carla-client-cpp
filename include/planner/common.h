@@ -7,6 +7,8 @@
 #ifndef MINJUN_PLANNER_COMMON_H_
 #define MINJUN_PLANNER_COMMON_H_
 
+#include "utils/common.h"
+
 #include "router/common.h"
 #include "utils/macrologger.h"
 
@@ -15,13 +17,13 @@ namespace planner {
 
 class PlannerPoint {
  public:
-  PlannerPoint(Point3d point, double speed, double yaw);
-  Point3d GetPoint() const;
+  PlannerPoint(utils::Point3d point, double speed, double yaw);
+  utils::Point3d GetPoint() const;
   double GetSpeed() const;
   double GetYaw() const;
 
  private:
-  Point3d point_;
+  utils::Point3d point_;
   double speed_;
   double yaw_;
 };
@@ -29,7 +31,7 @@ class PlannerPoint {
 class Utils {
  public:
   // In degree
-  static double GetYaw(const Point3d& p1, const Point3d& p2);
+  static double GetYaw(const utils::Point3d& p1, const utils::Point3d& p2);
   // static double GetDistance(const Point3d& p1, const Point3d& p2);
   // Solve function like a*x^2 + b*x + c = 0;
   static boost::optional<std::pair<double, double>> SolveFunction(
