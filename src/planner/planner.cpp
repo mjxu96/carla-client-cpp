@@ -38,6 +38,9 @@ Planner::Planner(Point3d start_point, Point3d end_point,
   look_ahead_index_ = static_cast<size_t>(look_ahead_distance_ / router_point_interval_);
 
 }
+std::vector<Point3d> Planner::GetRouterPoints() const {
+  return router_points_;
+}
 
 std::vector<PlannerPoint> Planner::GetPlannerPoints() {
   std::vector<PlannerPoint> planner_points;
@@ -87,6 +90,11 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
   planner_points_.emplace_back(current_odom.GetPosition(), current_odom.GetSpeed(), current_odom.GetYaw());
   std::vector<PlannerPoint> planner_points;
   size_t current_index = map_utils_.FindBehindIndex(router_points_, current_odom.GetPosition());
+  // std::cout << "current pos: " << current_odom.GetPosition().ToString() << std::endl;
+  // std::cout << "start pos: " << router_points_[0].ToString() << std::endl;
+  // std::cout << "start 2 pos: " << router_points_[1].ToString() << std::endl;
+  // std::cout << "current idx: " << current_index << std::endl;
+  // return planner_points;
   if (current_index >= router_points_.size() - 1) {
     return planner_points;
   }
@@ -95,11 +103,17 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
   auto curr_speed = current_odom.GetSpeed();
   auto curr_yaw = current_odom.GetYaw();
   for (size_t i = current_index + 1; i < router_points_.size() - 1; i++) {
+    if ((curr_speed == 0.0 || curr_yaw == 0.0) && i != current_index + 1) {
+      std::cout << i - 1 << std::endl;
+      return std::vector<PlannerPoint>();
+    }
     auto next_point = router_points_[i];
     auto s = Distance(curr_point, next_point);
     auto target_yaw = Utils::GetYaw(router_points_[i], router_points_[i+1]);
     if (IsInJunction(i)) {
+      // std::cout << "in junction: " << i << std::endl;
       auto speed_limit = constants::Constants::junction_speed;
+      // std::cout << "current speed: " << curr_speed << "  target limit: " << speed_limit << "  s: " << s << std::endl;
       auto next_speed_and_yaw = NextSpeedAndYaw(curr_speed, speed_limit, curr_yaw, target_yaw, s);
       curr_point = next_point;
       curr_speed = next_speed_and_yaw.first;
@@ -107,6 +121,7 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
     } else {
       int next_junction_index = NextCloseToJunction(i);
       if (next_junction_index >= 0) {
+        // std::cout << "close junction: " << i << std::endl;
         double junction_speed_limit = constants::Constants::junction_speed;
         auto tmp_curr_point = curr_point;
         auto tmp_next_point = next_point;
@@ -135,6 +150,7 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
           curr_yaw = next_speed_and_yaw.second;
         }
       } else {
+        // std::cout << "normal: " << i << std::endl;
         auto speed_limit = constants::Constants::speed;
         auto next_speed_and_yaw = NextSpeedAndYaw(curr_speed, speed_limit, curr_yaw, target_yaw, s);
         curr_point = next_point;
@@ -175,13 +191,14 @@ std::pair<double, double> Planner::NextSpeedAndYaw(double current_speed, double 
   if (target_speed > current_speed) {
     double acce_limit = constants::Constants::acceleration;
     auto t_option = Utils::SolveFunction(0.5 * acce_limit, current_speed, -s);
+    // LOG_DEBUG("solve function %.2f * t + 0.5 * %.2f * t^2 = %.2f", current_speed, acce_limit, s);
     if (t_option == boost::none) {
-      LOG_ERROR("Something error when solve time function");
+      LOG_ERROR("no root. Something error when solve time function");
       return {0, 0};
     }
     auto t = std::max(t_option.value().first, t_option.value().second);
     if (t < 0) {
-      LOG_ERROR("Something error when solve time function");
+      LOG_ERROR("all values are less than 0. Something error when solve time function");
       return {0, 0};
     }
 
@@ -197,27 +214,52 @@ std::pair<double, double> Planner::NextSpeedAndYaw(double current_speed, double 
     return {current_speed, current_yaw};
   } else {
     double dece_limit = constants::Constants::deceleration;
-    auto t_option = Utils::SolveFunction(-0.5 * dece_limit, current_speed, -s);
-    if (t_option == boost::none) {
-      LOG_ERROR("Something error when solve time function");
-      return {0, 0};
-    }
-    auto t = std::max(t_option.value().first, t_option.value().second);
-    if (t < 0) {
-      LOG_ERROR("Something error when solve time function");
-      return {0, 0};
+    double t = (2 * s) / (current_speed + target_speed);
+    double dece_real = (current_speed - target_speed) / t;
+    if (dece_real > dece_limit) {
+      LOG_WARNING("Deceleration is over limit, dece limit is %.2f, actual required dece is: %.2f", dece_limit, dece_real);
+      // LOG_DEBUG("solve function %.2f * t - 0.5 * %.2f * t^2 = %.2f", current_speed, dece_limit, s);
+      auto t_option = Utils::SolveFunction(-0.5 * dece_limit, current_speed, -s);
+      if (t_option == boost::none) {
+        LOG_ERROR("no root. Something error when solve time function");
+        return {0, 0};
+      }
+      t = std::max(t_option.value().first, t_option.value().second);
+      if (t < 0) {
+        LOG_ERROR("all values are less than 0. Something error when solve time function");
+        return {0, 0};
+      }
+      current_speed -= t * dece_limit;
+      current_yaw = Utils::AfterRotate(current_yaw, target_yaw, t, constants::Constants::yaw_rate);
+      return {current_speed, current_yaw};
+    } else {
+      current_yaw = Utils::AfterRotate(current_yaw, target_yaw, t, constants::Constants::yaw_rate);
+      return {target_speed, current_yaw};
     }
 
-    double tmp_curr_speed = current_speed;
-    current_speed -= t * dece_limit;
-    if (current_speed < target_speed) {
-      current_speed = target_speed;
-      double tmp_t = (-target_speed + tmp_curr_speed) / dece_limit;
-      double s_left = s - tmp_t * (tmp_curr_speed + target_speed) / 2.0;
-      t = tmp_t + s_left / target_speed;
-    }
-    current_yaw = Utils::AfterRotate(current_yaw, target_yaw, t, constants::Constants::yaw_rate);
-    return {current_speed, current_yaw};
+    // auto t_option = Utils::SolveFunction(-0.5 * dece_limit, current_speed, -s);
+    // LOG_DEBUG("solve function %.2f * t - 0.5 * %.2f * t^2 = %.2f", current_speed, dece_limit, s);
+    // if (t_option == boost::none) {
+    //   LOG_ERROR("no root. Something error when solve time function");
+    //   return {0, 0};
+    // }
+    // auto t = std::max(t_option.value().first, t_option.value().second);
+    // if (t < 0) {
+    //   LOG_ERROR("Something error when solve time function");
+    //   LOG_ERROR("all values are less than 0. Something error when solve time function");
+    //   return {0, 0};
+    // }
+
+    // double tmp_curr_speed = current_speed;
+    // current_speed -= t * dece_limit;
+    // if (current_speed < target_speed) {
+    //   current_speed = target_speed;
+    //   double tmp_t = (-target_speed + tmp_curr_speed) / dece_limit;
+    //   double s_left = s - tmp_t * (tmp_curr_speed + target_speed) / 2.0;
+    //   t = tmp_t + s_left / target_speed;
+    // }
+    // current_yaw = Utils::AfterRotate(current_yaw, target_yaw, t, constants::Constants::yaw_rate);
+    // return {current_speed, current_yaw};
   }
 }
 
@@ -260,6 +302,9 @@ int main(int argc, char* argv[]) {
   auto init_yaw = vehicle1->GetTransform().rotation.yaw;
   Planner planner(p1, p2, map, init_yaw, 0.0);
 
+  auto router_points = planner.GetRouterPoints();
+  p1 = router_points[0];
+
   // dbg use
   // router.DbgSetActor(vehicle1);
 
@@ -278,6 +323,7 @@ int main(int argc, char* argv[]) {
     vehicle1->SetTransform(transfrom);
     points = planner.GetPlannerPoints(Odom(router_point, points[0].GetSpeed(), points[0].GetYaw()));
     std::this_thread::sleep_for(50ms);
+
   }
 
 

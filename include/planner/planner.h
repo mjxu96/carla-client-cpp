@@ -21,6 +21,7 @@ class Planner {
           double init_speed = 0.0);
   std::vector<planner::PlannerPoint> GetPlannerPoints();
   std::vector<planner::PlannerPoint> GetPlannerPoints(const utils::Odom& current_odom);
+  std::vector<utils::Point3d> GetRouterPoints() const;
 
  private:
   bool IsInJunction(size_t index);

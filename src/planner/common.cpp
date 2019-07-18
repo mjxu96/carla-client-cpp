@@ -28,12 +28,14 @@ boost::optional<std::pair<double, double>> Utils::SolveFunction(
     const double a, const double b, const double c) {
   if (std::abs(a) <= 0.000001) {
     if (std::abs(b) <= 0.00001) {
+      LOG_ERROR("[FUNCTION SOLVER] a and b are both 0");
       return boost::none;
     } else {
       return std::make_pair(-c / b, -c / b);
     }
   }
   if (b * b - 4 * a * c < 0) {
+    LOG_ERROR("[FUNCTION SOLVER] delta is less than 0");
     return boost::none;
   }
   double delta = std::sqrt(b * b - 4 * a * c);
