@@ -90,11 +90,6 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
   planner_points_.emplace_back(current_odom.GetPosition(), current_odom.GetSpeed(), current_odom.GetYaw());
   std::vector<PlannerPoint> planner_points;
   size_t current_index = map_utils_.FindBehindIndex(router_points_, current_odom.GetPosition());
-  // std::cout << "current pos: " << current_odom.GetPosition().ToString() << std::endl;
-  // std::cout << "start pos: " << router_points_[0].ToString() << std::endl;
-  // std::cout << "start 2 pos: " << router_points_[1].ToString() << std::endl;
-  // std::cout << "current idx: " << current_index << std::endl;
-  // return planner_points;
   if (current_index >= router_points_.size() - 1) {
     return planner_points;
   }
@@ -111,9 +106,7 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
     auto s = Distance(curr_point, next_point);
     auto target_yaw = Utils::GetYaw(router_points_[i], router_points_[i+1]);
     if (IsInJunction(i)) {
-      // std::cout << "in junction: " << i << std::endl;
       auto speed_limit = constants::Constants::junction_speed;
-      // std::cout << "current speed: " << curr_speed << "  target limit: " << speed_limit << "  s: " << s << std::endl;
       auto next_speed_and_yaw = NextSpeedAndYaw(curr_speed, speed_limit, curr_yaw, target_yaw, s);
       curr_point = next_point;
       curr_speed = next_speed_and_yaw.first;
@@ -121,7 +114,6 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
     } else {
       int next_junction_index = NextCloseToJunction(i);
       if (next_junction_index >= 0) {
-        // std::cout << "close junction: " << i << std::endl;
         double junction_speed_limit = constants::Constants::junction_speed;
         auto tmp_curr_point = curr_point;
         auto tmp_next_point = next_point;
@@ -191,7 +183,6 @@ std::pair<double, double> Planner::NextSpeedAndYaw(double current_speed, double 
   if (target_speed > current_speed) {
     double acce_limit = constants::Constants::acceleration;
     auto t_option = Utils::SolveFunction(0.5 * acce_limit, current_speed, -s);
-    // LOG_DEBUG("solve function %.2f * t + 0.5 * %.2f * t^2 = %.2f", current_speed, acce_limit, s);
     if (t_option == boost::none) {
       LOG_ERROR("no root. Something error when solve time function");
       return {0, 0};
@@ -218,7 +209,6 @@ std::pair<double, double> Planner::NextSpeedAndYaw(double current_speed, double 
     double dece_real = (current_speed - target_speed) / t;
     if (dece_real > dece_limit) {
       LOG_WARNING("Deceleration is over limit, dece limit is %.2f, actual required dece is: %.2f", dece_limit, dece_real);
-      // LOG_DEBUG("solve function %.2f * t - 0.5 * %.2f * t^2 = %.2f", current_speed, dece_limit, s);
       auto t_option = Utils::SolveFunction(-0.5 * dece_limit, current_speed, -s);
       if (t_option == boost::none) {
         LOG_ERROR("no root. Something error when solve time function");
@@ -237,29 +227,7 @@ std::pair<double, double> Planner::NextSpeedAndYaw(double current_speed, double 
       return {target_speed, current_yaw};
     }
 
-    // auto t_option = Utils::SolveFunction(-0.5 * dece_limit, current_speed, -s);
-    // LOG_DEBUG("solve function %.2f * t - 0.5 * %.2f * t^2 = %.2f", current_speed, dece_limit, s);
-    // if (t_option == boost::none) {
-    //   LOG_ERROR("no root. Something error when solve time function");
-    //   return {0, 0};
-    // }
-    // auto t = std::max(t_option.value().first, t_option.value().second);
-    // if (t < 0) {
-    //   LOG_ERROR("Something error when solve time function");
-    //   LOG_ERROR("all values are less than 0. Something error when solve time function");
-    //   return {0, 0};
-    // }
 
-    // double tmp_curr_speed = current_speed;
-    // current_speed -= t * dece_limit;
-    // if (current_speed < target_speed) {
-    //   current_speed = target_speed;
-    //   double tmp_t = (-target_speed + tmp_curr_speed) / dece_limit;
-    //   double s_left = s - tmp_t * (tmp_curr_speed + target_speed) / 2.0;
-    //   t = tmp_t + s_left / target_speed;
-    // }
-    // current_yaw = Utils::AfterRotate(current_yaw, target_yaw, t, constants::Constants::yaw_rate);
-    // return {current_speed, current_yaw};
   }
 }
 
@@ -305,38 +273,43 @@ int main(int argc, char* argv[]) {
   auto router_points = planner.GetRouterPoints();
   p1 = router_points[0];
 
-  // dbg use
-  // router.DbgSetActor(vehicle1);
-
-  // auto points = planner.GetPlannerPoints();
-  // planner.GetPlannerPoints(p1);
-
   Odom init_odom(p1, 0.0, init_yaw);
   auto points = planner.GetPlannerPoints(init_odom);
+  auto router_point = points[2].GetPoint();
+  auto current_speed = points[2].GetSpeed();
+  carla::geom::Rotation rotation1(0.0, points[2].GetYaw(), 0.0);
+  carla::geom::Transform transfrom1(
+      carla::geom::Location(router_point.x_, router_point.y_,
+                            router_point.z_),
+      rotation1);
+  vehicle1->SetTransform(transfrom1);
+  std::this_thread::sleep_for(100ms);
+
   while (points.size() != 0) {
-    auto router_point = points[0].GetPoint();
-    carla::geom::Rotation rotation(0.0, points[0].GetYaw(), 0.0);
+    auto location = vehicle1->GetLocation();
+    auto current_yaw = vehicle1->GetTransform().rotation.yaw;
+    double x_ran = ((double)std::rand()) / 4.0 / RAND_MAX;
+    double y_ran = ((double)std::rand()) / 4.0 / RAND_MAX;
+    auto current_pos = Point3d(location.x + x_ran, location.y + y_ran, 0);
+    Odom current_odom(current_pos, current_speed, current_yaw);
+    auto next_pos = planner.GetPlannerPoints(current_odom);
+    router_point = next_pos[0].GetPoint();
+    std::cout << "current pos: " << current_pos.ToString() << std::endl;
+    std::cout << "next pos: " << router_point.ToString() << std::endl;
+    carla::geom::Rotation rotation(0.0, next_pos[0].GetYaw(), 0.0);
     carla::geom::Transform transfrom(
         carla::geom::Location(router_point.x_, router_point.y_,
                               router_point.z_),
         rotation);
     vehicle1->SetTransform(transfrom);
-    points = planner.GetPlannerPoints(Odom(router_point, points[0].GetSpeed(), points[0].GetYaw()));
+    world.WaitForTick(100ms);
     std::this_thread::sleep_for(50ms);
+    // points = planner.GetPlannerPoints(Odom(Point3d(location.x, location.y, location.z), points[0].GetSpeed(), points[0].GetYaw()));
 
   }
 
 
-  // for (const auto& point : points) {
-  //   auto router_point = point.GetPoint();
-  //   carla::geom::Rotation rotation(0.0, point.GetYaw(), 0.0);
-  //   carla::geom::Transform transfrom(
-  //       carla::geom::Location(router_point.x_, router_point.y_,
-  //                             router_point.z_),
-  //       rotation);
-  //   vehicle1->SetTransform(transfrom);
-  //   std::this_thread::sleep_for(50ms);
-  // }
+
   std::cin.ignore();
   std::cin.get();
   vehicle1->Destroy();
