@@ -16,6 +16,12 @@ bool Point3d::operator==(const Point3d& p) const {
   return std::sqrt(std::pow((p.x_ - x_), 2.0) + std::pow((p.y_ - y_), 2.0) +
                    std::pow((p.z_ - z_), 2.0)) < 0.001;
 }
+
+double Point3d::Distance(const Point3d& p) const {
+  return std::sqrt(std::pow((p.x_ - x_), 2.0) + std::pow((p.y_ - y_), 2.0) +
+                   std::pow((p.z_ - z_), 2.0));
+}
+
 std::string Point3d::ToString() const {
   return std::string("[") + std::to_string(x_) + std::string(", ") +
          std::to_string(y_) + std::string(", ") + std::to_string(z_) +
@@ -48,6 +54,7 @@ double Line2d::Distance(const Point3d& p, bool is_projection) {
   return -1.0;
 }
 
+// Map utils
 MapUtils::MapUtils(boost::shared_ptr<carla::client::Map> map_ptr) :
   map_ptr_(std::move(map_ptr)) {}
 
@@ -62,14 +69,20 @@ size_t MapUtils::FindBehindIndex(const std::vector<Point3d>& points, const Point
     return 0;
   }
   double min_distance = std::numeric_limits<double>::max();
+  double alter_min_distance = std::numeric_limits<double>::max();
   bool is_find = false;
   size_t index = 0;
+  size_t alter_index = 0;
   for (size_t i = 0; i < points.size() - 1; i++) {
     Line2d line(points[i], points[i+1]);
-    if (!IsWithinSegment(points[i], points[i+1], current_point)) {
-      continue;
-    }
     double distance = line.Distance(current_point);
+    // if (!IsWithinSegment(points[i], points[i+1], current_point)) {
+    //   if (distance < alter_min_distance) {
+    //     alter_index = i;
+    //     alter_min_distance = distance;
+    //   }
+    //   continue;
+    // }
     if (distance < min_distance) {
       is_find = true;
       min_distance = distance;
@@ -77,7 +90,8 @@ size_t MapUtils::FindBehindIndex(const std::vector<Point3d>& points, const Point
     }
   }
   if (!is_find) {
-    return points.size() - 1;
+    std::cout << "not found!!!!!!!!!!!!!! use alter: " << alter_index << std::endl;
+    return alter_index;
   }
   return index;
 }

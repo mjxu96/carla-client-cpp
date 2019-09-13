@@ -31,7 +31,7 @@ class Point3d {
 
   bool operator==(const Point3d& p) const;
 
-
+  double Distance(const Point3d& p) const;
   std::string ToString() const;
 };
 

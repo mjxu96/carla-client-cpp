@@ -90,6 +90,7 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
   planner_points_.emplace_back(current_odom.GetPosition(), current_odom.GetSpeed(), current_odom.GetYaw());
   std::vector<PlannerPoint> planner_points;
   size_t current_index = map_utils_.FindBehindIndex(router_points_, current_odom.GetPosition());
+  std::cout << "current idx: " << current_index << std::endl;
   if (current_index >= router_points_.size() - 1) {
     return planner_points;
   }
@@ -234,6 +235,7 @@ std::pair<double, double> Planner::NextSpeedAndYaw(double current_speed, double 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     std::cout << "error, not enough params" << std::endl;
+    return 0;
   }
   std::string host(argv[1]);
   uint16_t port(2000u);
@@ -288,12 +290,16 @@ int main(int argc, char* argv[]) {
   while (points.size() != 0) {
     auto location = vehicle1->GetLocation();
     auto current_yaw = vehicle1->GetTransform().rotation.yaw;
-    double x_ran = ((double)std::rand()) / 4.0 / RAND_MAX;
-    double y_ran = ((double)std::rand()) / 4.0 / RAND_MAX;
-    auto current_pos = Point3d(location.x + x_ran, location.y + y_ran, 0);
+    auto current_pos = Point3d(location.x, location.y, 0);
     Odom current_odom(current_pos, current_speed, current_yaw);
     auto next_pos = planner.GetPlannerPoints(current_odom);
-    router_point = next_pos[0].GetPoint();
+    std::cout << "next pos size: " << next_pos.size() << std::endl;
+    if (next_pos.size() <= 1) {
+      vehicle1->Destroy();
+      vehicle2->Destroy();
+      return 0;
+    }
+    router_point = next_pos[1].GetPoint();
     std::cout << "current pos: " << current_pos.ToString() << std::endl;
     std::cout << "next pos: " << router_point.ToString() << std::endl;
     carla::geom::Rotation rotation(0.0, next_pos[0].GetYaw(), 0.0);
