@@ -10,6 +10,7 @@
 #include "carla/client/Map.h"
 #include "carla/geom/Location.h"
 #include "carla/client/Waypoint.h"
+#include "carla/geom/Vector3D.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/geometry.hpp>
@@ -73,6 +74,7 @@ private:
   double yaw_{0};
 };
 
+double Vector3DToDoulbe(const carla::geom::Vector3D& vec);
  
 } // namespace utils 
   

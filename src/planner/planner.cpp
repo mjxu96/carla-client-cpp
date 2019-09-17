@@ -4,8 +4,6 @@ using namespace minjun;
 using namespace minjun::utils;
 using namespace minjun::planner;
 
-using namespace std::chrono_literals;
-using namespace std::string_literals;
 
 Planner::Planner(Point3d start_point, Point3d end_point,
                  boost::shared_ptr<carla::client::Map> map_ptr, double init_yaw,
@@ -99,10 +97,11 @@ std::vector<PlannerPoint> Planner::GetPlannerPoints(const Odom& current_odom) {
   auto curr_speed = current_odom.GetSpeed();
   auto curr_yaw = current_odom.GetYaw();
   for (size_t i = current_index + 1; i < router_points_.size() - 1; i++) {
-    if ((curr_speed == 0.0 || curr_yaw == 0.0) && i != current_index + 1) {
-      std::cout << i - 1 << std::endl;
-      return std::vector<PlannerPoint>();
-    }
+    // Actually I dont know why I put this if condition here when I wrote this planner....
+    // if ((curr_speed == 0.0 || curr_yaw == 0.0) && i != current_index + 1) {
+    //   std::cout << i - 1 << std::endl;
+    //   return std::vector<PlannerPoint>();
+    // }
     auto next_point = router_points_[i];
     auto s = Distance(curr_point, next_point);
     auto target_yaw = Utils::GetYaw(router_points_[i], router_points_[i+1]);
@@ -232,93 +231,93 @@ std::pair<double, double> Planner::NextSpeedAndYaw(double current_speed, double 
   }
 }
 
-int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    std::cout << "error, not enough params" << std::endl;
-    return 0;
-  }
-  std::string host(argv[1]);
-  uint16_t port(2000u);
-  auto client = carla::client::Client(host, port);
-  client.SetTimeout(10s);
-  auto world = client.GetWorld();
-  auto map = world.GetMap();
-  auto blueprint_library = world.GetBlueprintLibrary();
-  auto vehicles = blueprint_library->Filter("vehicle");
-  auto vehicle_bp = (*vehicles)[0];
+// int main(int argc, char* argv[]) {
+//   if (argc < 2) {
+//     std::cout << "error, not enough params" << std::endl;
+//     return 0;
+//   }
+//   std::string host(argv[1]);
+//   uint16_t port(2000u);
+//   auto client = carla::client::Client(host, port);
+//   client.SetTimeout(10s);
+//   auto world = client.GetWorld();
+//   auto map = world.GetMap();
+//   auto blueprint_library = world.GetBlueprintLibrary();
+//   auto vehicles = blueprint_library->Filter("vehicle");
+//   auto vehicle_bp = (*vehicles)[0];
 
-  auto transforms = (*map).GetRecommendedSpawnPoints();
-  auto size = transforms.size();
+//   auto transforms = (*map).GetRecommendedSpawnPoints();
+//   auto size = transforms.size();
 
-  SetAllTrafficLightToBeGreen(world);
+//   // SetAllTrafficLightToBeGreen(world);
 
-  size_t p1_i = 0;
-  size_t p2_i = size / 2;
-  if (argc >= 3) {
-    p1_i = std::stoi(argv[2]) % transforms.size();
-    if (argc >= 4) {
-      p2_i = std::stoi(argv[3]) % transforms.size();
-    }
-  }
-  Point3d p1(transforms[p1_i].location.x, transforms[p1_i].location.y,
-             transforms[p1_i].location.z);
-  Point3d p2(transforms[p2_i].location.x, transforms[p2_i].location.y,
-             transforms[p2_i].location.z);
-  std::cout << "start point: " << p1.ToString() << std::endl;
-  std::cout << "end point: " << p2.ToString() << std::endl;
-  auto vehicle1 = world.SpawnActor(vehicle_bp, transforms[p1_i]);
-  auto vehicle2 = world.SpawnActor(vehicle_bp, transforms[p2_i]);
-  vehicle1->SetSimulatePhysics(false);
-  auto init_yaw = vehicle1->GetTransform().rotation.yaw;
-  Planner planner(p1, p2, map, init_yaw, 0.0);
+//   size_t p1_i = 0;
+//   size_t p2_i = size / 2;
+//   if (argc >= 3) {
+//     p1_i = std::stoi(argv[2]) % transforms.size();
+//     if (argc >= 4) {
+//       p2_i = std::stoi(argv[3]) % transforms.size();
+//     }
+//   }
+//   Point3d p1(transforms[p1_i].location.x, transforms[p1_i].location.y,
+//              transforms[p1_i].location.z);
+//   Point3d p2(transforms[p2_i].location.x, transforms[p2_i].location.y,
+//              transforms[p2_i].location.z);
+//   std::cout << "start point: " << p1.ToString() << std::endl;
+//   std::cout << "end point: " << p2.ToString() << std::endl;
+//   auto vehicle1 = world.SpawnActor(vehicle_bp, transforms[p1_i]);
+//   auto vehicle2 = world.SpawnActor(vehicle_bp, transforms[p2_i]);
+//   vehicle1->SetSimulatePhysics(false);
+//   auto init_yaw = vehicle1->GetTransform().rotation.yaw;
+//   Planner planner(p1, p2, map, init_yaw, 0.0);
 
-  auto router_points = planner.GetRouterPoints();
-  p1 = router_points[0];
+//   auto router_points = planner.GetRouterPoints();
+//   p1 = router_points[0];
 
-  Odom init_odom(p1, 0.0, init_yaw);
-  auto points = planner.GetPlannerPoints(init_odom);
-  auto router_point = points[2].GetPoint();
-  auto current_speed = points[2].GetSpeed();
-  carla::geom::Rotation rotation1(0.0, points[2].GetYaw(), 0.0);
-  carla::geom::Transform transfrom1(
-      carla::geom::Location(router_point.x_, router_point.y_,
-                            router_point.z_),
-      rotation1);
-  vehicle1->SetTransform(transfrom1);
-  std::this_thread::sleep_for(100ms);
+//   Odom init_odom(p1, 0.0, init_yaw);
+//   auto points = planner.GetPlannerPoints(init_odom);
+//   auto router_point = points[2].GetPoint();
+//   auto current_speed = points[2].GetSpeed();
+//   carla::geom::Rotation rotation1(0.0, points[2].GetYaw(), 0.0);
+//   carla::geom::Transform transfrom1(
+//       carla::geom::Location(router_point.x_, router_point.y_,
+//                             router_point.z_),
+//       rotation1);
+//   vehicle1->SetTransform(transfrom1);
+//   std::this_thread::sleep_for(100ms);
 
-  while (points.size() != 0) {
-    auto location = vehicle1->GetLocation();
-    auto current_yaw = vehicle1->GetTransform().rotation.yaw;
-    auto current_pos = Point3d(location.x, location.y, 0);
-    Odom current_odom(current_pos, current_speed, current_yaw);
-    auto next_pos = planner.GetPlannerPoints(current_odom);
-    std::cout << "next pos size: " << next_pos.size() << std::endl;
-    if (next_pos.size() <= 1) {
-      vehicle1->Destroy();
-      vehicle2->Destroy();
-      return 0;
-    }
-    router_point = next_pos[1].GetPoint();
-    std::cout << "current pos: " << current_pos.ToString() << std::endl;
-    std::cout << "next pos: " << router_point.ToString() << std::endl;
-    carla::geom::Rotation rotation(0.0, next_pos[0].GetYaw(), 0.0);
-    carla::geom::Transform transfrom(
-        carla::geom::Location(router_point.x_, router_point.y_,
-                              router_point.z_),
-        rotation);
-    vehicle1->SetTransform(transfrom);
-    world.WaitForTick(100ms);
-    std::this_thread::sleep_for(50ms);
-    // points = planner.GetPlannerPoints(Odom(Point3d(location.x, location.y, location.z), points[0].GetSpeed(), points[0].GetYaw()));
+//   while (points.size() != 0) {
+//     auto location = vehicle1->GetLocation();
+//     auto current_yaw = vehicle1->GetTransform().rotation.yaw;
+//     auto current_pos = Point3d(location.x, location.y, 0);
+//     Odom current_odom(current_pos, current_speed, current_yaw);
+//     auto next_pos = planner.GetPlannerPoints(current_odom);
+//     std::cout << "next pos size: " << next_pos.size() << std::endl;
+//     if (next_pos.size() <= 1) {
+//       vehicle1->Destroy();
+//       vehicle2->Destroy();
+//       return 0;
+//     }
+//     router_point = next_pos[1].GetPoint();
+//     std::cout << "current pos: " << current_pos.ToString() << std::endl;
+//     std::cout << "next pos: " << router_point.ToString() << std::endl;
+//     carla::geom::Rotation rotation(0.0, next_pos[0].GetYaw(), 0.0);
+//     carla::geom::Transform transfrom(
+//         carla::geom::Location(router_point.x_, router_point.y_,
+//                               router_point.z_),
+//         rotation);
+//     vehicle1->SetTransform(transfrom);
+//     world.WaitForTick(100ms);
+//     std::this_thread::sleep_for(50ms);
+//     // points = planner.GetPlannerPoints(Odom(Point3d(location.x, location.y, location.z), points[0].GetSpeed(), points[0].GetYaw()));
 
-  }
+//   }
 
 
 
-  std::cin.ignore();
-  std::cin.get();
-  vehicle1->Destroy();
-  vehicle2->Destroy();
-  return 0;
-}
+//   std::cin.ignore();
+//   std::cin.get();
+//   vehicle1->Destroy();
+//   vehicle2->Destroy();
+//   return 0;
+// }

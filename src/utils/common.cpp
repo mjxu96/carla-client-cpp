@@ -106,3 +106,7 @@ bool MapUtils::IsWithinSegment(const Point3d& p1, const Point3d& p2, const Point
 
 Odom::Odom(Point3d pos, double speed, double yaw) :
   pos_(std::move(pos)), speed_(speed), yaw_(yaw) {}
+
+double minjun::utils::Vector3DToDoulbe(const carla::geom::Vector3D& vec) {
+  return std::sqrt(vec.x * vec.x + vec.y * vec.y + vec.z *vec.z);
+}
