@@ -128,10 +128,7 @@ int main(int argc, char* argv[]) {
     auto next_pos = planner.GetPlannerPoints(current_odom);
     // std::cout << "next pos size: " << next_pos.size() << std::endl;
     if (next_pos.size() <= 4) {
-      vehicle1->Destroy();
-      vehicle2->Destroy();
-      world.ApplySettings(previous_settings);
-      return 0;
+      break;
     }
     router_point = next_pos[1].GetPoint();
     std::cout << "current pos: " << current_pos.ToString() << std::endl;
@@ -157,10 +154,11 @@ int main(int argc, char* argv[]) {
     // location.z), points[0].GetSpeed(), points[0].GetYaw()));
   }
 
-  std::cin.ignore();
-  std::cin.get();
+  // std::cin.ignore();
+  // std::cin.get();
   vehicle1->Destroy();
   vehicle2->Destroy();
+  lidar->Destroy();
   world.ApplySettings(previous_settings);
   return 0;
 }
