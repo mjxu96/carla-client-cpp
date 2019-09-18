@@ -46,6 +46,7 @@ class Router {
 
  private:
   void SetPointInterval(double interval);
+  bool AreNextWaypointsInJunction(const boost::shared_ptr<carla::client::Waypoint>& waypoint);
   std::vector<utils::Point3d> RRT();
   std::vector<utils::Point3d> Dijkstra();
   std::vector<utils::Point3d> AStar();
