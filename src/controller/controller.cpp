@@ -18,6 +18,8 @@ using namespace std::string_literals;
 
 carla::SharedPtr<carla::client::Actor> vehicle1 = nullptr;
 carla::SharedPtr<carla::client::Actor> vehicle2 = nullptr;
+carla::SharedPtr<carla::client::Actor> lidar = nullptr;
+
 carla::rpc::EpisodeSettings previous_settings;
 std::shared_ptr<carla::client::World> world_ptr_ = nullptr;
 
@@ -28,6 +30,9 @@ void my_handler(int s) {
   }
   if (vehicle2 != nullptr) {
     vehicle2->Destroy();
+  }
+  if (lidar != nullptr) {
+    lidar->Destroy();
   }
   if (world_ptr_ != nullptr) {
     world_ptr_->ApplySettings(previous_settings);
@@ -76,7 +81,16 @@ int main(int argc, char* argv[]) {
   std::cout << "end point: " << p2.ToString() << std::endl;
   vehicle1 = world.SpawnActor(vehicle_bp, transforms[p1_i]);
   vehicle2 = world.SpawnActor(vehicle_bp, transforms[p2_i]);
-  // vehicle1->SetSimulatePhysics(false);
+
+  auto lidar_bp = (*blueprint_library->Filter("sensor.lidar.ray_cast"))[0];
+  lidar_bp.SetAttribute("range", "5000");
+
+  // Spawn a camera attached to the vehicle.
+  auto lidar_transform = carla::geom::Transform{
+      carla::geom::Location{0.8f, 0.0f, 1.7f}};   // x, y, z.
+  lidar = world.SpawnActor(lidar_bp, lidar_transform, vehicle1.get());
+
+
   auto init_yaw = vehicle1->GetTransform().rotation.yaw;
   Planner planner(p1, p2, map, init_yaw, 0.0);
   std::shared_ptr<Controller> controller =
