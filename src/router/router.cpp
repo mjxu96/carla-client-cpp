@@ -48,7 +48,8 @@ std::vector<Point3d> Router::GetRoutePoints(double interval) {
   // std::cout << "BFS time:      " << bfs_time << std::endl;
   // std::cout << "Dijkstra time: " << dijkstra_time << std::endl;
   // std::cout << "RRT time:      " << rrt_time << std::endl;
-  return AStar();
+  // return AStar();
+  return BFS();
 }
 
 std::vector<Point3d> Router::RRT() {
@@ -177,6 +178,30 @@ std::vector<Point3d> Router::AStar() {
     }
 
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
+    auto current_lane_change = current_waypoint->GetLaneChange();
+
+    if (current_lane_change == carla::road::element::LaneMarking::LaneChange::Both ||
+        current_lane_change == carla::road::element::LaneMarking::LaneChange::Right) {
+      auto next_right_waypoint = current_waypoint->GetRight();
+      if (next_right_waypoint != nullptr) {
+        auto next_right_waypoints = next_right_waypoint->GetNext(point_interval_);
+        for (auto right_waypoint : next_right_waypoints) {
+          next_waypoints.push_back(right_waypoint);
+        }
+      }
+    }
+
+    if (current_lane_change == carla::road::element::LaneMarking::LaneChange::Both ||
+        current_lane_change == carla::road::element::LaneMarking::LaneChange::Left) {
+      auto next_left_waypoint = current_waypoint->GetLeft();
+      if (next_left_waypoint != nullptr) {
+        auto next_left_waypoints = next_left_waypoint->GetNext(point_interval_);
+        for (auto left_waypoint : next_left_waypoints) {
+          next_waypoints.push_back(left_waypoint);
+        }
+      }
+    }
+
     for (const auto& next_waypoint : next_waypoints) {
       double tmp_g_score =
           g_score[current_waypoint] + Distance(next_waypoint, current_waypoint);
@@ -230,6 +255,28 @@ std::vector<Point3d> Router::BFS() {
       //}
     }
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
+    auto current_lane_change = current_waypoint->GetLaneChange();
+    if (current_lane_change == carla::road::element::LaneMarking::LaneChange::Both ||
+        current_lane_change == carla::road::element::LaneMarking::LaneChange::Right) {
+      auto next_right_waypoint = current_waypoint->GetRight();
+      if (next_right_waypoint != nullptr) {
+        auto next_right_waypoints = next_right_waypoint->GetNext(point_interval_);
+        for (auto right_waypoint : next_right_waypoints) {
+          next_waypoints.push_back(right_waypoint);
+        }
+      }
+    }
+
+    if (current_lane_change == carla::road::element::LaneMarking::LaneChange::Both ||
+        current_lane_change == carla::road::element::LaneMarking::LaneChange::Left) {
+      auto next_left_waypoint = current_waypoint->GetLeft();
+      if (next_left_waypoint != nullptr) {
+        auto next_left_waypoints = next_left_waypoint->GetNext(point_interval_);
+        for (auto left_waypoint : next_left_waypoints) {
+          next_waypoints.push_back(left_waypoint);
+        }
+      }
+    }
     for (const auto& next_waypoint : next_waypoints) {
       uint64_t id = next_waypoint->GetId();
       if (travelled_points.find(id) != travelled_points.end()) {

@@ -55,7 +55,7 @@ class Router {
   utils::Point3d end_point_;
 
   double point_interval_{2};
-  double distance_threshold_{20.0};
+  double distance_threshold_{5.0};
 
   // debug use
   boost::shared_ptr<carla::client::Actor> actor_{nullptr};

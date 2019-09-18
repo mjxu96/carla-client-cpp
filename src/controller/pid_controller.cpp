@@ -53,7 +53,7 @@ ControlCommand PIDController::Control(
   control_command.throttle = std::min(std::max(throttle_feedback + throttle_feedforward, 0.0), 1.0);
 
   // PID on steer
-  double steer_limit = 15.0 / 180.0 * M_PI;
+  double steer_limit = 25.0 / 180.0 * M_PI;
   target_yaw = std::atan2(target_pos.y_ - current_pos.y_, target_pos.x_ - current_pos.x_);
   double yaw_error = target_yaw - current_yaw;
   if (yaw_error <= -M_PI) {
