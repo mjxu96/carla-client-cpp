@@ -62,6 +62,7 @@ int main(int argc, char* argv[]) {
 
   auto transforms = (*map).GetRecommendedSpawnPoints();
   auto size = transforms.size();
+  bool is_wait_for_tick = false;
 
   // SetAllTrafficLightToBeGreen(world);
 
@@ -72,6 +73,9 @@ int main(int argc, char* argv[]) {
     if (argc >= 4) {
       p2_i = std::stoi(argv[3]) % transforms.size();
     }
+  }
+  if (argc >= 5) {
+    is_wait_for_tick = true;
   }
   Point3d p1(transforms[p1_i].location.x, transforms[p1_i].location.y,
              transforms[p1_i].location.z);
@@ -117,7 +121,12 @@ int main(int argc, char* argv[]) {
   std::this_thread::sleep_for(100ms);
 
   while (points.size() != 0) {
-    world.Tick();
+    if (!is_wait_for_tick) {
+      world.Tick();
+    } else {
+      world.WaitForTick(10min);
+    }
+
     auto location = vehicle1->GetLocation();
     auto current_yaw = vehicle1->GetTransform().rotation.yaw;
     auto current_pos = Point3d(location.x, location.y, 0);
