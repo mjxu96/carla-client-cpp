@@ -54,7 +54,7 @@ class Router {
   utils::Point3d start_point_;
   utils::Point3d end_point_;
 
-  double point_interval_{2};
+  double point_interval_{2.0};
   double distance_threshold_{5.0};
 
   // debug use

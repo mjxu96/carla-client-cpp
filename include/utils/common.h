@@ -45,6 +45,8 @@ public:
 
   double DotMul(const Line2d& l);
   double Distance(const Point3d& p, bool is_projection = true);
+  bool IsSameDirection(const Line2d& l);
+  std::string ToString() const;
 };
 
 class MapUtils {
@@ -52,7 +54,6 @@ public:
   MapUtils(boost::shared_ptr<carla::client::Map> map_ptr);
   bool IsInJunction(const Point3d& p);
   size_t FindBehindIndex(const std::vector<Point3d>& points, const Point3d& current_point);
-
 
 private:
   bool IsWithinSegment(const Point3d& p1, const Point3d& p2, const Point3d& p);

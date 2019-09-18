@@ -71,6 +71,12 @@ double Distance(const Point3d& p1, const Point3d& p2) {
                    std::pow((p1.z_ - p2.z_), 2.0));
 }
 
+Line2d GetLineBetweenWaypoints(const boost::shared_ptr<carla::client::Waypoint>& w1, const boost::shared_ptr<carla::client::Waypoint>& w2) {
+  Point3d start(w1->GetTransform().location.x, w1->GetTransform().location.y, w1->GetTransform().location.z);
+  Point3d end(w2->GetTransform().location.x, w2->GetTransform().location.y, w2->GetTransform().location.z);
+  return Line2d(start, end);
+}
+
 void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr) {
   auto actors = world_ptr.GetActors();
   for (const auto& actor : *actors) {

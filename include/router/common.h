@@ -76,6 +76,8 @@ double Distance(const boost::shared_ptr<carla::client::Waypoint>& p1,
 
 double Distance(const Point3d& p1, const Point3d& p2);
 
+Line2d GetLineBetweenWaypoints(const boost::shared_ptr<carla::client::Waypoint>& w1, const boost::shared_ptr<carla::client::Waypoint>& w2);
+
 void SetAllTrafficLightToBeGreen(const carla::client::World& world_ptr);
 
 class RRTUtils {

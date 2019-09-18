@@ -9,6 +9,8 @@ link_directories(${CLIENT_ROOT_FOLDER}/lib)
 
 add_library(router-lib common.cpp)
 add_library(router router.cpp)
+add_executable(router-test router.cpp)
 
 target_link_libraries(router router-lib common carla_client rpc boost_filesystem png tiff jpeg)
+target_link_libraries(router-test router)
 target_include_directories(router PUBLIC .)

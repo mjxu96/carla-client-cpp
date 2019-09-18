@@ -53,6 +53,13 @@ double Line2d::Distance(const Point3d& p, bool is_projection) {
   }
   return -1.0;
 }
+bool Line2d::IsSameDirection(const Line2d& l) {
+  return DotMul(l) >= 0;
+}
+
+std::string Line2d::ToString() const {
+  return start_.ToString() + " -> " + end_.ToString();
+}
 
 // Map utils
 MapUtils::MapUtils(boost::shared_ptr<carla::client::Map> map_ptr) :

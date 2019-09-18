@@ -48,8 +48,8 @@ std::vector<Point3d> Router::GetRoutePoints(double interval) {
   // std::cout << "BFS time:      " << bfs_time << std::endl;
   // std::cout << "Dijkstra time: " << dijkstra_time << std::endl;
   // std::cout << "RRT time:      " << rrt_time << std::endl;
-  // return AStar();
-  return BFS();
+  return AStar();
+  // return BFS();
 }
 
 std::vector<Point3d> Router::RRT() {
@@ -146,31 +146,45 @@ std::vector<Point3d> Router::Dijkstra() {
 
 std::vector<Point3d> Router::AStar() {
   std::set<Node, NodeComparator> open_set;
-  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>,
-                       boost::shared_ptr<carla::client::Waypoint>>
+  boost::unordered_map<uint64_t, uint64_t>
       waypoint_predecessor;
-  boost::unordered_map<boost::shared_ptr<carla::client::Waypoint>, double>
-      g_score;
+  boost::unordered_map<uint64_t, double> g_score;
+  boost::unordered_map<uint64_t, boost::shared_ptr<carla::client::Waypoint>> waypoint_map;
   auto start_waypoint = map_ptr_->GetWaypoint(
       carla::geom::Location(start_point_.x_, start_point_.y_, start_point_.z_));
+
+
   auto end_waypoint = map_ptr_->GetWaypoint(
       carla::geom::Location(end_point_.x_, end_point_.y_, end_point_.z_));
-  g_score.insert({start_waypoint, 0.0});
+  g_score.insert({start_waypoint->GetId(), 0.0});
+  waypoint_map[start_waypoint->GetId()] = start_waypoint;
   Node start_node(start_waypoint, Distance(start_waypoint, end_waypoint));
   open_set.insert(start_node);
+
+  // // DBG
+  // int count = 0;
 
   while (!open_set.empty()) {
     auto current_node_it = open_set.begin();
     auto current_waypoint = current_node_it->GetWaypoint();
+
+    // //DBG
+    if (actor_ != nullptr) {
+      actor_->SetTransform(current_waypoint->GetTransform());
+      std::this_thread::sleep_for(10ms);
+    }
+
     open_set.erase(current_node_it);
+    auto current_waypoint_id = current_waypoint->GetId();
     if (Distance(end_waypoint, current_waypoint) < distance_threshold_) {
       std::cout << "A* found" << std::endl;
       std::vector<boost::shared_ptr<carla::client::Waypoint>> result_waypoints;
-      while (waypoint_predecessor.find(current_waypoint) !=
+      while (waypoint_predecessor.find(current_waypoint_id) !=
              waypoint_predecessor.end()) {
         result_waypoints.push_back(current_waypoint);
         current_waypoint =
-            (waypoint_predecessor.find(current_waypoint)->second);
+            waypoint_map[waypoint_predecessor.find(current_waypoint_id)->second];
+        current_waypoint_id = current_waypoint->GetId();
       }
       auto result = ConvertFromWaypointToPoint3d(result_waypoints);
       std::reverse(result.begin(), result.end());
@@ -180,35 +194,77 @@ std::vector<Point3d> Router::AStar() {
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
     auto current_lane_change = current_waypoint->GetLaneChange();
 
-    if (current_lane_change == carla::road::element::LaneMarking::LaneChange::Both ||
-        current_lane_change == carla::road::element::LaneMarking::LaneChange::Right) {
+    if (current_lane_change ==
+            carla::road::element::LaneMarking::LaneChange::Both ||
+        current_lane_change ==
+            carla::road::element::LaneMarking::LaneChange::Right) {
       auto next_right_waypoint = current_waypoint->GetRight();
       if (next_right_waypoint != nullptr) {
-        auto next_right_waypoints = next_right_waypoint->GetNext(point_interval_);
-        for (auto right_waypoint : next_right_waypoints) {
-          next_waypoints.push_back(right_waypoint);
+        auto lane_type = next_right_waypoint->GetType();
+        if (lane_type == carla::road::Lane::LaneType::Driving) {
+          auto next_right_waypoints =
+              next_right_waypoint->GetNext(point_interval_);
+          for (auto right_waypoint : next_right_waypoints) {
+            next_waypoints.push_back(right_waypoint);
+          }
         }
       }
     }
 
-    if (current_lane_change == carla::road::element::LaneMarking::LaneChange::Both ||
-        current_lane_change == carla::road::element::LaneMarking::LaneChange::Left) {
+    if (current_lane_change ==
+            carla::road::element::LaneMarking::LaneChange::Both ||
+        current_lane_change ==
+            carla::road::element::LaneMarking::LaneChange::Left) {
       auto next_left_waypoint = current_waypoint->GetLeft();
-      if (next_left_waypoint != nullptr) {
-        auto next_left_waypoints = next_left_waypoint->GetNext(point_interval_);
-        for (auto left_waypoint : next_left_waypoints) {
-          next_waypoints.push_back(left_waypoint);
+      auto prev_current_waypoint_id_it =
+          waypoint_predecessor.find(current_waypoint_id);
+      if (next_left_waypoint != nullptr &&
+          prev_current_waypoint_id_it != waypoint_predecessor.end()) {
+        auto lane_type = next_left_waypoint->GetType();
+        if (lane_type == carla::road::Lane::LaneType::Driving) {
+          auto prev_current_waypoint = waypoint_map[prev_current_waypoint_id_it->second];
+          auto current_line =
+              GetLineBetweenWaypoints(prev_current_waypoint, current_waypoint);
+          auto next_left_waypoints =
+              next_left_waypoint->GetNext(point_interval_);
+          for (auto left_waypoint : next_left_waypoints) {
+            auto next_line =
+                GetLineBetweenWaypoints(next_left_waypoint, left_waypoint);
+            // if (current_line.IsSameDirection(next_line)) {
+              next_waypoints.push_back(left_waypoint);
+            // } else {
+            //   std::cout << current_line.ToString() << std::endl;
+            //   std::cout << next_line.ToString() << std::endl;
+            // }
+          }
         }
       }
     }
 
     for (const auto& next_waypoint : next_waypoints) {
+      // //DBG
+      // if (actor_ != nullptr) {
+      //   actor_->SetTransform(next_waypoint->GetTransform());
+      //   std::this_thread::sleep_for(100ms);
+      // }
+      // count++;
+      // if (count > 200) {
+      //   break;
+      // }
+      // auto lane_id = next_waypoint->GetLaneId();
+      // if (current_lanes.find(lane_id) != current_lanes.end()) {
+      //   continue;
+      // }
+      // current_lanes.insert(lane_id);
+
+      auto next_waypoint_id = next_waypoint->GetId();
+      waypoint_map[next_waypoint_id] = next_waypoint;
       double tmp_g_score =
-          g_score[current_waypoint] + Distance(next_waypoint, current_waypoint);
-      if (g_score.find(next_waypoint) == g_score.end() ||
-          g_score[next_waypoint] > tmp_g_score) {
-        g_score[next_waypoint] = tmp_g_score;
-        waypoint_predecessor[next_waypoint] = current_waypoint;
+          g_score[current_waypoint_id] + Distance(next_waypoint, current_waypoint);
+      if (g_score.find(next_waypoint_id) == g_score.end() ||
+          g_score[next_waypoint_id] > tmp_g_score) {
+        g_score[next_waypoint_id] = tmp_g_score;
+        waypoint_predecessor[next_waypoint_id] = current_waypoint_id;
         Node next_node(next_waypoint,
                        tmp_g_score + Distance(end_waypoint, next_waypoint));
         auto next_node_it = open_set.find(next_node);
@@ -218,6 +274,10 @@ std::vector<Point3d> Router::AStar() {
         open_set.insert(next_node);
       }
     }
+
+    // // DBG
+    // if (count > 200)
+    //   break;
   }
 
   std::cout << "A* not found" << std::endl;
@@ -256,19 +316,24 @@ std::vector<Point3d> Router::BFS() {
     }
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
     auto current_lane_change = current_waypoint->GetLaneChange();
-    if (current_lane_change == carla::road::element::LaneMarking::LaneChange::Both ||
-        current_lane_change == carla::road::element::LaneMarking::LaneChange::Right) {
+    if (current_lane_change ==
+            carla::road::element::LaneMarking::LaneChange::Both ||
+        current_lane_change ==
+            carla::road::element::LaneMarking::LaneChange::Right) {
       auto next_right_waypoint = current_waypoint->GetRight();
       if (next_right_waypoint != nullptr) {
-        auto next_right_waypoints = next_right_waypoint->GetNext(point_interval_);
+        auto next_right_waypoints =
+            next_right_waypoint->GetNext(point_interval_);
         for (auto right_waypoint : next_right_waypoints) {
           next_waypoints.push_back(right_waypoint);
         }
       }
     }
 
-    if (current_lane_change == carla::road::element::LaneMarking::LaneChange::Both ||
-        current_lane_change == carla::road::element::LaneMarking::LaneChange::Left) {
+    if (current_lane_change ==
+            carla::road::element::LaneMarking::LaneChange::Both ||
+        current_lane_change ==
+            carla::road::element::LaneMarking::LaneChange::Left) {
       auto next_left_waypoint = current_waypoint->GetLeft();
       if (next_left_waypoint != nullptr) {
         auto next_left_waypoints = next_left_waypoint->GetNext(point_interval_);
@@ -335,14 +400,14 @@ void Router::DbgSetActor(boost::shared_ptr<carla::client::Actor> actor) {
 //   Router router(p1, p2, map);
 
 //   // dbg use
-//   // router.DbgSetActor(vehicle1);
+//   router.DbgSetActor(vehicle1);
 
 //   auto points = router.GetRoutePoints();
 
-//   for (const auto& point : points) {
-//     vehicle1->SetLocation(carla::geom::Location(point.x_, point.y_, point.z_));
-//     std::this_thread::sleep_for(50ms);
-//   }
+//   // for (const auto& point : points) {
+//   //   vehicle1->SetLocation(carla::geom::Location(point.x_, point.y_,
+//   //   point.z_)); std::this_thread::sleep_for(50ms);
+//   // }
 //   std::cin.ignore();
 //   std::cin.get();
 //   vehicle1->Destroy();
