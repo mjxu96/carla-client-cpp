@@ -161,18 +161,10 @@ std::vector<Point3d> Router::AStar() {
   Node start_node(start_waypoint, Distance(start_waypoint, end_waypoint));
   open_set.insert(start_node);
 
-  // // DBG
-  // int count = 0;
 
   while (!open_set.empty()) {
     auto current_node_it = open_set.begin();
     auto current_waypoint = current_node_it->GetWaypoint();
-
-    // //DBG
-    if (actor_ != nullptr) {
-      actor_->SetTransform(current_waypoint->GetTransform());
-      std::this_thread::sleep_for(10ms);
-    }
 
     open_set.erase(current_node_it);
     auto current_waypoint_id = current_waypoint->GetId();
@@ -242,20 +234,6 @@ std::vector<Point3d> Router::AStar() {
     }
 
     for (const auto& next_waypoint : next_waypoints) {
-      // //DBG
-      // if (actor_ != nullptr) {
-      //   actor_->SetTransform(next_waypoint->GetTransform());
-      //   std::this_thread::sleep_for(100ms);
-      // }
-      // count++;
-      // if (count > 200) {
-      //   break;
-      // }
-      // auto lane_id = next_waypoint->GetLaneId();
-      // if (current_lanes.find(lane_id) != current_lanes.end()) {
-      //   continue;
-      // }
-      // current_lanes.insert(lane_id);
 
       auto next_waypoint_id = next_waypoint->GetId();
       waypoint_map[next_waypoint_id] = next_waypoint;
@@ -275,9 +253,6 @@ std::vector<Point3d> Router::AStar() {
       }
     }
 
-    // // DBG
-    // if (count > 200)
-    //   break;
   }
 
   std::cout << "A* not found" << std::endl;
@@ -307,12 +282,8 @@ std::vector<Point3d> Router::BFS() {
     point_queue.pop();
     if (Distance(current_waypoint->GetTransform().location, end_location) <
         distance_threshold_) {
-      // auto current_lane_id = current_waypoint->GetLaneId();
-      // auto current_road_id = current_waypoint->GetRoadId();
-      // if (current_lane_id == end_lane_id && current_road_id == end_road_id) {
       std::cout << "BFS found" << std::endl;
       return ConvertFromWaypointToPoint3d(current_waypoints);
-      //}
     }
     auto next_waypoints = current_waypoint->GetNext(point_interval_);
     auto current_lane_change = current_waypoint->GetLaneChange();
